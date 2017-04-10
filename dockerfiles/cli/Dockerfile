@@ -15,7 +15,7 @@
 # use:
 #    docker run -v $(pwd):/codenvy codenvy/cli [command]
 
-FROM eclipse/che-base:5.7.1
+FROM eclipse/che-base:5.7.2
 
 COPY scripts /scripts/
 COPY version /version/
