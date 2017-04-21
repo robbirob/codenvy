@@ -36,6 +36,8 @@ import java.io.IOException;
 import java.util.Optional;
 
 /**
+ * Performs country validation before finishing OAuth login
+ *
  * @author Max Shaposhnik
  */
 @Singleton
