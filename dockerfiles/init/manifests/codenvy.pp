@@ -316,6 +316,12 @@ $machine_docker_parent_cgroup = getValue("CODENVY_DOCKER_PARENT_CGROUP","NULL")
 
 ###############################
 #
+# Blocked countries
+  $auth_blocked_country_names = getValue("CODENVY_AUTH_BLOCKED_COUNTRY_NAMES","NULL")
+
+
+###############################
+#
 # Codenvy folders on host machine
   $codenvy_folder = getValue("CHE_INSTANCE","/tmp/codenvy")
 
