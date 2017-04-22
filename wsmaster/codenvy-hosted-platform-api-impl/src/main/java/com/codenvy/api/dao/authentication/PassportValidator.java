@@ -44,7 +44,12 @@ public class PassportValidator {
     @Inject
     public PassportValidator(ProfileDao profileDao, @Nullable @Named("auth.blocked_country_names") String[] blockedList) {
         this.profileDao = profileDao;
-        this.blockedList = blockedList != null ? Arrays.asList(blockedList) : new ArrayList<>();
+        if (blockedList == null ||
+            blockedList.length == 0 ) {
+            this.blockedList = new ArrayList<>();
+        } else {
+            this.blockedList = Arrays.asList(blockedList);
+        }
     }
 
     public void validate(String userId) throws AuthenticationException {

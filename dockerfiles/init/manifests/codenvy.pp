@@ -322,7 +322,7 @@ $machine_docker_parent_cgroup = getValue("CODENVY_DOCKER_PARENT_CGROUP","NULL")
 ###############################
 #
 # Blocked countries
-  $auth_blocked_country_names = getValue("CODENVY_AUTH_BLOCKED_COUNTRY_NAMES","NULL")
+  $auth_blocked_country_names = getValue("CODENVY_AUTH_BLOCKED_COUNTRY_NAMES","")
 
 
 ###############################
