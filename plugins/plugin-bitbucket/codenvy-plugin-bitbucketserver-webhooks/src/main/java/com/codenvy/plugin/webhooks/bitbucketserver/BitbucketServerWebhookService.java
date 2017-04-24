@@ -30,20 +30,15 @@ import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.factory.shared.dto.FactoryDto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.commons.env.EnvironmentContext;
-import org.eclipse.che.dto.server.DtoFactory;
 import org.eclipse.che.inject.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -99,21 +94,16 @@ public class BitbucketServerWebhookService extends BaseWebhookService {
 
     @POST
     @Consumes(APPLICATION_JSON)
-    public Response handleWebhookEvent(@Context HttpServletRequest request) throws ServerException {
+    public void handleWebhookEvent(PushEvent event) throws ServerException {
         EnvironmentContext.getCurrent().setSubject(new TokenSubject());
-        Response response = Response.noContent().build();
-        try (ServletInputStream inputStream = request.getInputStream()) {
-            if (inputStream == null) {
-                return response;
-            }
-            final PushEvent event = DtoFactory.getInstance().createDtoFromJson(inputStream, PushEvent.class);
-            LOG.debug("{}", event);
+        LOG.debug("{}", event);
+        try {
             for (RefChange refChange : event.getRefChanges()) {
                 Optional<Changeset> changeset = event.getChangesets()
                                                      .getValues()
                                                      .stream()
                                                      .filter(changeSet -> changeSet.getToCommit().getId().equals(refChange.getToHash()))
-                                                     .findFirst();
+                                                     .findAny();
                 if (!changeset.isPresent()) {
                     continue;
                 }
@@ -124,19 +114,21 @@ public class BitbucketServerWebhookService extends BaseWebhookService {
                 }
                 String eventType = refChange.getType().toLowerCase();
                 if ("update".equals(eventType) || "add".equals(eventType)) {
+
                     handlePushEvent(event, refChange.getRefId().substring(11));
+
                 }
             }
         } catch (IOException e) {
-            LOG.error(e.getLocalizedMessage());
-            throw new ServerException(e.getLocalizedMessage());
+            LOG.warn(e.getMessage());
+            throw new ServerException(e.getMessage());
+        } finally {
+            EnvironmentContext.reset();
         }
-
-        return response;
     }
 
     @VisibleForTesting
-    void handlePushEvent(PushEvent event, String branch) throws ServerException {
+    void handlePushEvent(PushEvent event, String branch) throws ServerException, IOException {
         Repository repository = event.getRepository();
         Project project = repository.getProject();
         String cloneUrl = computeCloneUrl(project.getKey(), repository.getSlug());
@@ -147,7 +139,7 @@ public class BitbucketServerWebhookService extends BaseWebhookService {
                 LOG.warn("Factory " + factory.getId() + " do not contain mandatory \'" + FACTORY_URL_REL + "\' link");
                 continue;
             }
-            getConnectors(factory.getId()).forEach(connector -> connector.addFactoryLink(factoryLink.getHref()));
+            addFactoryLinkToCiJobsDescription(factory.getId(), factoryLink.getHref());
         }
     }
 
