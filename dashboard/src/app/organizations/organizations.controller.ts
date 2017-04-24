@@ -56,11 +56,12 @@ export class OrganizationsController {
    */
   constructor(codenvyOrganization: CodenvyOrganization, cheNotification: any,
               codenvyTeamEventsManager: CodenvyTeamEventsManager, $scope: ng.IScope,
-              $q: ng.IQService, codenvyPermissions: CodenvyPermissions) {
+              $q: ng.IQService, codenvyPermissions: CodenvyPermissions, $rootScope: che.IRootScopeService) {
     this.codenvyOrganization = codenvyOrganization;
     this.cheNotification = cheNotification;
     this.$q = $q;
     this.codenvyPermissions = codenvyPermissions;
+    $rootScope.showIDE = false;
 
     let refreshHandler = () => {
       this.fetchOrganizations();

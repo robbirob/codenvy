@@ -51,7 +51,7 @@ export class AdminsUserManagementCtrl {
    * Default constructor.
    * @ngInject for Dependency injection
    */
-  constructor($q: ng.IQService, $log: ng.ILogService, $mdDialog: ng.material.IDialogService, cheUser: any, codenvyLicense: CodenvyLicense,
+  constructor($q: ng.IQService, $rootScope: che.IRootScopeService, $log: ng.ILogService, $mdDialog: ng.material.IDialogService, cheUser: any, codenvyLicense: CodenvyLicense,
               cheNotification: any, licenseMessagesService: LicenseMessagesService, confirmDialogService: any, codenvyOrganization: CodenvyOrganization) {
     this.$q = $q;
     this.$log = $log;
@@ -62,6 +62,8 @@ export class AdminsUserManagementCtrl {
     this.cheNotification = cheNotification;
     this.licenseMessagesService = licenseMessagesService;
     this.confirmDialogService = confirmDialogService;
+
+    $rootScope.showIDE = false;
 
     this.isLoading = false;
 
@@ -256,6 +258,7 @@ export class AdminsUserManagementCtrl {
           this.$log.error(error);
         });
         if (isError) {
+          //TODO process error message
           this.cheNotification.showError('Delete failed.');
         } else {
           if (numberToDelete === 1) {

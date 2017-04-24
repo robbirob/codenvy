@@ -17,8 +17,31 @@
  */
 
 .admins-add-user-form
-  min-width 720px
-  max-width 80%
+  min-width 520px
+
+  .form-input-fields
+    margin 20px 0px
+
+  che-filter-selector
+    margin-bottom 20px
+    line-height 33px
+
+  che-filter-selector .che-filter-selector-button
+    max-width 400px
+    width 400px
+
+  .che-input-box-desktop
+    width 520px
+    max-width 520px
+
+  label
+    max-width 23% !important
+    width 23% !important
+    margin-top 10px
+
+  input
+    width 400px
+    float right
 
 .admins-add-user-form .che-input-desktop-label
   margin-top 1px
@@ -30,6 +53,7 @@
 .admins-add-user-form .password-prompt
   font-size 12px
   color $disabled-color
+  margin-bottom 20px
 
 .admins-add-user-form .password-prompt p
   margin-top 5px
@@ -44,7 +68,3 @@
 
   & > div
     margin-bottom 10px
-
-.admins-add-user-form che-button-primary,
-.admins-add-user-form che-button-notice
-  float right

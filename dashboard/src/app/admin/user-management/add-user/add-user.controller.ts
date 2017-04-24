@@ -15,32 +15,55 @@
 'use strict';
 import {LicenseMessagesService} from '../../../onprem/license-messages/license-messages.service';
 import {AdminsUserManagementCtrl} from '../user-management.controller';
-
+import {CodenvyOrganization} from '../../../../components/api/codenvy-organizations.factory';
+import {CodenvyPermissions} from '../../../../components/api/codenvy-permissions.factory';
+import {CodenvyOrganizationRoles} from '../../../../components/api/codenvy-organization-roles';
 
 /**
  * This class is handling the controller for the add user
  * @author Oleksii Orel
  */
 export class AdminsAddUserController {
-  $mdDialog: ng.material.IDialogService;
-  cheNotification: any;
-  cheUser: any;
-  callbackController: AdminsUserManagementCtrl;
-  licenseMessagesService: LicenseMessagesService;
-  newUserName: string;
-  newUserEmail: string;
-  newUserPassword: string;
+  private $mdDialog: ng.material.IDialogService;
+  private lodash: _.LoDashStatic;
+  private cheNotification: any;
+  private cheUser: any;
+  private callbackController: AdminsUserManagementCtrl;
+  private licenseMessagesService: LicenseMessagesService;
+  private newUserName: string;
+  private newUserEmail: string;
+  private newUserPassword: string;
+  private organizations: Array<string>;
+  private organization: string;
+  private codenvyOrganization: CodenvyOrganization;
+  private codenvyPermissions: CodenvyPermissions;
 
   /**
    * Default constructor.
    * @ngInject for Dependency injection
    */
-  constructor($mdDialog: ng.material.IDialogService, cheUser: any, cheNotification: any,
-              licenseMessagesService: LicenseMessagesService) {
+  constructor($mdDialog: ng.material.IDialogService, cheUser: any, cheNotification: any, lodash: _.LoDashStatic,
+              licenseMessagesService: LicenseMessagesService, codenvyOrganization: CodenvyOrganization, codenvyPermissions: CodenvyPermissions) {
     this.$mdDialog = $mdDialog;
+    this.lodash = lodash;
     this.cheUser = cheUser;
     this.cheNotification = cheNotification;
     this.licenseMessagesService = licenseMessagesService;
+    this.codenvyOrganization = codenvyOrganization;
+    this.codenvyPermissions = codenvyPermissions;
+
+    this.organizations = [];
+
+    this.codenvyOrganization.fetchOrganizations().then(() => {
+      let organizations = this.codenvyOrganization.getOrganizations();
+      let rootOrganizations = organizations.filter((organization: any) => {
+        return !organization.parent;
+      });
+      this.organizations = lodash.pluck(rootOrganizations, 'name');
+      if (this.organizations.length > 0) {
+        this.organization = this.organizations[0];
+      }
+    });
   }
 
   /**
@@ -56,14 +79,49 @@ export class AdminsAddUserController {
   createUser(): void {
     let promise = this.cheUser.createUser(this.newUserName, this.newUserEmail, this.newUserPassword);
 
-    promise.then(() => {
-      this.$mdDialog.hide();
-      this.callbackController.updateUsers();
-      this.cheNotification.showInfo('User successfully created.');
-      this.licenseMessagesService.fetchMessages();
+    promise.then((data: any) => {
+      if (this.organization) {
+        this.addUserToOrganization(data.id);
+      } else {
+        this.finish();
+      }
     }, (error: any) => {
-      this.cheNotification.showError(error.data.message ? error.data.message : '.');
+      this.cheNotification.showError(error.data.message ? error.data.message : 'Failed to create user.');
     });
   }
 
+  /**
+   * Finish user creation.
+   */
+  private finish(): void {
+    this.$mdDialog.hide();
+    this.callbackController.updateUsers();
+    this.cheNotification.showInfo('User successfully created.');
+    this.licenseMessagesService.fetchMessages();
+  }
+
+  /**
+   * Adds user to choosen organization.
+   *
+   * @param userId
+   */
+  private addUserToOrganization(userId: string): void {
+    let organizations = this.codenvyOrganization.getOrganizations();
+    let organization = this.lodash.find(organizations, (organization: any) => {
+      return organization.name === this.organization;
+    });
+
+    let actions = CodenvyOrganizationRoles.MEMBER.actions;
+    let permissions = {
+      instanceId: organization.id,
+      userId: userId,
+      domainId: 'organization',
+      actions: actions
+    };
+    this.codenvyPermissions.storePermissions(permissions).then(() => {
+      this.finish();
+    }, (error: any) => {
+      this.cheNotification.showError(error.data.message ? error.data.message : 'Failed to add user to organization' + this.organization + '.');
+    });
+  }
 }

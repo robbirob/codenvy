@@ -18,33 +18,39 @@
 
 -->
 <che-popup title="Add user" on-close="adminsAddUserController.abort()">
-  <ng-form name="createUserForm" class="admins-add-user-form">
+  <ng-form name="createUserForm" class="admins-add-user-form" layout="column" align="center center">
     <div class="form-input-fields">
-      <che-input che-form="createUserForm"
+      <che-input-box che-form="createUserForm"
                  che-name="login"
                  che-label-name="User Login"
                  che-place-holder="login"
                  ng-model="adminsAddUserController.newUserName"
                  required
+                 focusable
                  ng-maxlength="100">
-        <div ng-message="required">User login is required.</div>
+        <div ng-message="required" ng-if="createUserForm.$dirty">User login is required.</div>
         <div ng-message="maxlength">User login to be less than 100 characters long.</div>
-      </che-input>
-      <che-input che-form="createUserForm"
+      </che-input-box>
+      <che-input-box che-form="createUserForm"
                  che-name="email"
                  che-label-name="User Email"
                  che-place-holder="e-mail"
                  ng-maxlength="100"
                  type="email"
-                 focusable
                  required
                  ng-model="adminsAddUserController.newUserEmail">
 
-        <div ng-message="required">Email is required.</div>
+        <div ng-message="required" ng-if="createUserForm.$dirty">Email is required.</div>
         <div ng-message="email">Enter a valid email address.</div>
         <div ng-message="maxlength">User email has to be less than 100 characters long</div>
-      </che-input>
-      <che-input che-form="createUserForm"
+      </che-input-box>
+      <div layout="row" layout-align="start start" ng-if="adminsAddUserController.organizations.length > 0">
+        <label>Organization:</label>
+        <che-filter-selector che-values="adminsAddUserController.organizations"
+                             ng-model="adminsAddUserController.organization"></che-filter-selector>
+      </div>
+
+      <che-input-box che-form="createUserForm"
                  che-name="password"
                  che-label-name="User Password"
                  che-place-holder="password"
@@ -55,23 +61,23 @@
                  required
                  ng-model="adminsAddUserController.newUserPassword">
 
-        <div ng-message="required">User password is required.</div>
+        <div ng-message="required" ng-if="createUserForm.$dirty">User password is required.</div>
         <div ng-message="pattern">User password should contain both letters and digits</div>
         <div ng-message="minlength">User password should contain at least 8 characters.</div>
         <div ng-message="maxlength">User password has to be less than 100 characters long.</div>
-      </che-input>
+      </che-input-box>
       <div class="password-prompt"
            layout-xs="column" layout-sm="column" layout-md="column"
            layout-gt-md="row" flex="100">
-        <div flex="50" flex-gt-md="15" class="password-prompt-text">
+        <div flex="50" flex-gt-md="25" class="password-prompt-text">
           <span>Minimum 8 characters, both letters and digits.</span>
         </div>
-        <div flex="50" flex-gt-md="25" layout="column" layout-align="center center">
+        <div flex="50" flex-gt-md="50" layout="column" layout-align="center center">
           <div class="pass-strength" ng-password-strength="adminsAddUserController.newUserPassword"
                strength="passStrength" inner-class="password-meter" class="ng-isolate-scope"></div>
         </div>
       </div>
-      <che-input che-form="createUserForm"
+      <che-input-box che-form="createUserForm"
                  che-name="confirmPassword"
                  che-label-name="Confirm Password"
                  che-place-holder="confirm password"
@@ -79,21 +85,23 @@
                  ng-maxlength="100"
                  type="password"
                  required>
-
-        <div ng-message="required">Confirm password is required.</div>
+        <div ng-message="required" ng-if="createUserForm.$dirty">Confirm password is required.</div>
         <div ng-message="maxlength">Confirm password has to be less than 100 characters long.</div>
         <div
           ng-show="confirmNewUserPassword && (confirmNewUserPassword !== adminsAddUserController.newUserPassword)">
           Passwords do not match.
         </div>
-      </che-input>
+      </che-input-box>
+
     </div>
-    <che-button-notice che-button-title="Cancel"
-                       ng-click="adminsAddUserController.abort()">
-    </che-button-notice>
-    <che-button-primary che-button-title="Create"
-                        ng-click="adminsAddUserController.createUser()"
-                        ng-disabled="createUserForm.$invalid || confirmNewUserPassword !== adminsAddUserController.newUserPassword">
-    </che-button-primary>
+    <div layout="row" layout-align="end center">
+      <che-button-notice che-button-title="Cancel"
+                         ng-click="adminsAddUserController.abort()">
+      </che-button-notice>
+      <che-button-primary che-button-title="Create"
+                          ng-click="adminsAddUserController.createUser()"
+                          ng-disabled="createUserForm.$invalid || confirmNewUserPassword !== adminsAddUserController.newUserPassword">
+      </che-button-primary>
+    </div>
   </ng-form>
 </che-popup>

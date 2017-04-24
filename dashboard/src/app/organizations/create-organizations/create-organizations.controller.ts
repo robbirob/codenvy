@@ -77,7 +77,7 @@ export class CreateOrganizationController {
    * @ngInject for Dependency injection
    */
   constructor(codenvyOrganization: CodenvyOrganization, codenvyPermissions: CodenvyPermissions, cheNotification: any,
-              $location: ng.ILocationService, $q: ng.IQService, $log: ng.ILogService,
+              $location: ng.ILocationService, $q: ng.IQService, $log: ng.ILogService, $rootScope: che.IRootScopeService,
               initData: any) {
     this.codenvyOrganization = codenvyOrganization;
     this.codenvyPermissions = codenvyPermissions;
@@ -85,6 +85,7 @@ export class CreateOrganizationController {
     this.$location = $location;
     this.$q = $q;
     this.$log = $log;
+    $rootScope.showIDE = false;
 
     this.organizationName = '';
     this.isLoading = false;

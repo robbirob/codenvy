@@ -17,6 +17,8 @@
 import {CodenvyTeamRoles} from './codenvy-team-roles';
 import {CodenvyTeamEventsManager} from './codenvy-team-events-manager.factory';
 import {CodenvyOrganization} from './codenvy-organizations.factory';
+import {CodenvyResourcesDistribution} from './codenvy-resources-distribution.factory';
+import {CodenvyResourceLimits} from './codenvy-resource-limits';
 
 interface ITeamsResource<T> extends ng.resource.IResourceClass<T> {
   findTeam(data: { teamName: string }): ng.resource.IResource<T>;
@@ -74,13 +76,17 @@ export class CodenvyTeam {
    * The Codenvy Organization Service.
    */
   private codenvyOrganization: CodenvyOrganization;
+  /**
+   * The Codenvy resources API.
+   */
+  private codenvyResourcesDistribution: CodenvyResourcesDistribution;
 
   /**
    * Default constructor that is using resource
    * @ngInject for Dependency injection
    */
   constructor($resource: ng.resource.IResourceService, $q: ng.IQService, lodash: any, cheNamespaceRegistry: any, cheUser: any,
-              codenvyOrganization: CodenvyOrganization, codenvyTeamEventsManager: CodenvyTeamEventsManager) {
+              codenvyOrganization: CodenvyOrganization, codenvyTeamEventsManager: CodenvyTeamEventsManager, codenvyResourcesDistribution: CodenvyResourcesDistribution) {
     this.$resource = $resource;
     this.$q = $q;
     this.lodash = lodash;
@@ -88,6 +94,7 @@ export class CodenvyTeam {
     this.cheUser = cheUser;
     this.teamEventsManager = codenvyTeamEventsManager;
     this.codenvyOrganization = codenvyOrganization;
+    this.codenvyResourcesDistribution = codenvyResourcesDistribution;
 
     this.remoteTeamAPI = <ITeamsResource<any>>$resource('/api/organization', {}, {
       findTeam: {method: 'GET', url: '/api/organization/find?name=:teamName'}
@@ -169,8 +176,11 @@ export class CodenvyTeam {
     if (this.personalAccount) {
       // display personal account as "personal" on UI, namespace(id) stays the same for API interactions:
       this.cheNamespaceRegistry.getNamespaces().push({id: this.personalAccount.qualifiedName, label: 'personal', location: '/billing'});
+      this.cheNamespaceRegistry.setCaption('Team');
     } else {
-      this.cheNamespaceRegistry.getNamespaces().push({id: name, label: 'personal', location: null});
+      this.cheNamespaceRegistry.setCaption('Organization');
+      this.cheNamespaceRegistry.setEmptyMessage('You are not member of any organization and not able to create workspace. Please, contact your administrator.');
+      this.processOrganizationInfoRetriever(organizations);
     }
 
     organizations.forEach((organization: codenvy.IOrganization) => {
@@ -192,6 +202,28 @@ export class CodenvyTeam {
       } else {
         this.cheNamespaceRegistry.getNamespaces().push({id: organization.qualifiedName, label: organization.qualifiedName, location: '/organization/' + organization.qualifiedName});
       }
+    });
+  }
+
+  /**
+   * Process organization information retriever.
+   *
+   * @param organizations
+   */
+  processOrganizationInfoRetriever(organizations: Array<codenvy.IOrganization>) {
+    this.cheNamespaceRegistry.setGetAdditionalInfo((namespaceId: string) => {
+      let organization = this.lodash.find(organizations, (organization: codenvy.IOrganization) => {
+        return organization.qualifiedName === namespaceId;
+      });
+
+      if (!organization) {
+        return null;
+      }
+
+      return this.codenvyResourcesDistribution.fetchAvailableOrganizationResources(organization.id).then(() => {
+        let resource = this.codenvyResourcesDistribution.getOrganizationAvailableResourceByType(organization.id, CodenvyResourceLimits.RAM);
+        return resource ? 'Available RAM: ' + (resource.amount / 1024) + 'GB' : null;
+      });
     });
   }
 
