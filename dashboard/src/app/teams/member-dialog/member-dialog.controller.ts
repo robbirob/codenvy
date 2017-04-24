@@ -152,7 +152,8 @@ export class MemberDialogController {
     let emails = value.replace(/ /g, ',').split(',');
     for (let i = 0; i < emails.length; i++) {
       let email = emails[i];
-      if (email.length > 0 && !/\S+@\S+\.\S+/.test(email)) {
+      let emailRe = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+      if (!emailRe.test(email)) {
         this.emailError = email + ' is invalid email address.';
         return false;
       }

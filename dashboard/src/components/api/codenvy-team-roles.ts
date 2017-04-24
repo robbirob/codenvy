@@ -13,6 +13,7 @@
  * from Codenvy S.A..
  */
 'use strict';
+import {CodenvyOrganizationActions} from './codenvy-organization-actions';
 
 /**
  * This is enum of team roles.
@@ -20,9 +21,22 @@
  * @author Ann Shumilova
  */
 export enum CodenvyTeamRoles {
-  TEAM_MEMBER = <any> {'title': 'Team Developer', 'description': 'Can create and use own workspaces.', 'actions' : ['createWorkspaces']},
-  TEAM_ADMIN = <any> {'title': 'Team Admin', 'description': 'Can edit the team’s settings, manage workspaces and members.',
-    'actions' : ['update', 'setPermissions', 'manageResources', 'manageWorkspaces', 'createWorkspaces', 'delete']},
+  TEAM_MEMBER = <any> {
+    'title': 'Team Developer',
+    'description': 'Can create and use own workspaces.',
+    'actions': [CodenvyOrganizationActions.CREATE_WORKSPACES]
+  },
+  TEAM_ADMIN = <any> {
+    'title': 'Team Admin', 'description': 'Can edit the team’s settings, manage workspaces and members.',
+    'actions': [
+      CodenvyOrganizationActions.UPDATE,
+      CodenvyOrganizationActions.SET_PERMISSIONS,
+      CodenvyOrganizationActions.MANAGE_RESOURCES,
+      CodenvyOrganizationActions.MANAGE_WORKSPACES,
+      CodenvyOrganizationActions.CREATE_WORKSPACES,
+      CodenvyOrganizationActions.DELETE,
+      CodenvyOrganizationActions.MANAGE_SUB_ORGANIZATION]
+  }
 }
 
 export namespace CodenvyTeamRoles {

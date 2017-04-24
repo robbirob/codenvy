@@ -86,7 +86,7 @@ export class CreateTeamController {
    * @ngInject for Dependency injection
    */
   constructor(codenvyTeam: CodenvyTeam, codenvyInvite: CodenvyInvite, cheUser: any, codenvyPermissions: CodenvyPermissions, cheNotification: any,
-              $location: ng.ILocationService, $q: ng.IQService, lodash: any, $log: ng.ILogService) {
+              $location: ng.ILocationService, $q: ng.IQService, lodash: any, $log: ng.ILogService, $rootScope: che.IRootScopeService) {
     this.codenvyTeam = codenvyTeam;
     this.codenvyInvite = codenvyInvite;
     this.cheUser = cheUser;
@@ -96,6 +96,8 @@ export class CreateTeamController {
     this.$q = $q;
     this.lodash = lodash;
     this.$log = $log;
+
+    $rootScope.showIDE = false;
 
     this.teamName = '';
     this.isLoading = true;

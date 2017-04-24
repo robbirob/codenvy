@@ -33,11 +33,13 @@ export class AdminsUserManagementConfig {
         resolve: {
           check: ['$q', 'codenvyPermissions', ($q, codenvyPermissions) => {
             let defer = $q.defer();
-            if (codenvyPermissions.getUserServices().hasUserService) {
-              defer.resolve();
-            } else {
-              defer.reject();
-            }
+            codenvyPermissions.fetchSystemPermissions().finally(() => {
+              if (codenvyPermissions.getUserServices().hasUserService) {
+                defer.resolve();
+              } else {
+                defer.reject();
+              }
+            });
             return defer.promise;
           }]
         }

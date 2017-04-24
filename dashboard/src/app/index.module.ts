@@ -27,6 +27,7 @@ import {CodenvyOnpremConfig} from './onprem/onprem-config';
 import {WorkspaceConfig} from './workspace/workspace-config';
 import {TeamsConfig} from './teams/teams-config';
 import {MainDashboardConfig} from './dashboard/main-dashboard-config';
+import {OrganizationsConfig} from './organizations/organizations-config';
 
 let initModule = angular.module('codenvyDashboard', ['ngAnimate', 'ngCookies', 'ngTouch', 'ngSanitize', 'braintree-angular', 'gavruk.card',
   'ngResource', 'ngRoute', 'ngPasswordStrength', 'ui.codemirror', 'ui.gravatar', 'userDashboard', 'ngMessages']);
@@ -132,8 +133,7 @@ initModule.factory('AuthInterceptor', ($window, $cookies, $q, $location, $log) =
 
       // do not add token on auth login
       if (config.url.indexOf('/api/auth/login') === -1 && config.url.indexOf('api/') !== -1 && $window.sessionStorage['codenvyToken'] && (!authHeader || authHeader.length === 0)) {
-        config.params = config.params || {};
-        angular.extend(config.params, {token: $window.sessionStorage['codenvyToken']});
+        config.headers['Authorization'] = $window.sessionStorage['codenvyToken'];
       }
       return config || $q.when(config);
     },
@@ -241,6 +241,7 @@ angular.module('ui.gravatar').config(['gravatarServiceProvider', (gravatarServic
 
 
 var instanceRegister = new Register(initModule);
+new OrganizationsConfig(instanceRegister);
 new MainDashboardConfig(instanceRegister);
 new BillingConfig(instanceRegister);
 new CodenvyNavbarConfig(instanceRegister);
