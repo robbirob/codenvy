@@ -15,13 +15,12 @@
     from Codenvy S.A..
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>codenvy-plugin-jenkins-parent</artifactId>
         <groupId>com.codenvy.plugin</groupId>
-        <version>5.9.0-SNAPSHOT</version>
+        <version>5.9.0</version>
     </parent>
     <artifactId>codenvy-plugin-jenkins-webhooks</artifactId>
     <name>Codenvy Plugin :: Jenkins :: Webhooks</name>
