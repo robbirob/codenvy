@@ -115,39 +115,12 @@ describe('CodenvyTeam', () => {
 
       // setup backend for teams
       codenvyHttpBackend.teamsBackendSetup();
-
-      /* fulfil all requests */
-      httpBackend.flush();
-    });
-
-    it('should reject promise if user\'s request failed', () => {
-      let errorMessage = 'user request failed',
-          callbacks = {
-            testResolve: () => {},
-            testReject: (error: any) => {
-              expect(error.data.message).toEqual(errorMessage);
-            }
-          };
-
-      // create spies
-      spyOn(callbacks, 'testResolve');
-      spyOn(callbacks, 'testReject');
-
-      factory.fetchTeams()
-        .then(callbacks.testResolve)
-        .catch(callbacks.testReject)
-        .finally();
-
-      // change response to make request fail
-      httpBackend.expect('GET', '/api/user').respond(404, {message: errorMessage});
-
-      httpBackend.flush();
-
-      expect(callbacks.testResolve).not.toHaveBeenCalled();
-      expect(callbacks.testReject).toHaveBeenCalled();
     });
 
     it('should reject promise if team\'s request failed', () => {
+      /* fulfil all requests */
+      httpBackend.flush();
+
       let errorMessage = 'teams request failed',
           callbacks = {
             testResolve: () => { },
@@ -161,7 +134,7 @@ describe('CodenvyTeam', () => {
       spyOn(callbacks, 'testReject');
 
       // change response to make request fail
-      httpBackend.expectGET('/api/organization').respond(404, {message: errorMessage});
+      httpBackend.expectGET(/\/api\/organization(\?.*$)?/).respond(404, {message: errorMessage});
 
       factory.fetchTeams()
         .then(callbacks.testResolve)
@@ -175,30 +148,9 @@ describe('CodenvyTeam', () => {
     });
 
     it('should resolve promise', () => {
-      let errorMessage = 'user request failed',
-          callbacks = {
-            testResolve: () => { },
-            testReject: (error: any) => {
-              expect(error.data.message).toEqual(errorMessage);
-            }
-          };
-
-      // create spies
-      spyOn(callbacks, 'testResolve');
-      spyOn(callbacks, 'testReject');
-
-      factory.fetchTeams()
-        .then(callbacks.testResolve)
-        .catch(callbacks.testReject)
-        .finally();
-
+      /* fulfil all requests */
       httpBackend.flush();
 
-      expect(callbacks.testResolve).toHaveBeenCalled();
-      expect(callbacks.testReject).not.toHaveBeenCalled();
-    });
-
-    it('should resolve promise if user\'s request status code equals 304', () => {
       let errorMessage = 'user request failed',
           callbacks = {
             testResolve: () => { },
@@ -215,9 +167,6 @@ describe('CodenvyTeam', () => {
         .then(callbacks.testResolve)
         .catch(callbacks.testReject)
         .finally();
-
-      // change response
-      httpBackend.expect('GET', '/api/user').respond(304, {});
 
       httpBackend.flush();
 
@@ -226,6 +175,9 @@ describe('CodenvyTeam', () => {
     });
 
     it('should resolve promise if team\'s request status code equals 304', () => {
+      /* fulfil all requests */
+      httpBackend.flush();
+
       let errorMessage = 'teams request failed',
           callbacks = {
             testResolve: () => { },
@@ -244,7 +196,7 @@ describe('CodenvyTeam', () => {
         .finally();
 
       // change response
-      httpBackend.expect('GET', '/api/organization').respond(304, {});
+      httpBackend.expect('GET', /\/api\/organization(\?.*$)?/).respond(304, {});
 
       httpBackend.flush();
 

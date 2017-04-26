@@ -17,14 +17,15 @@
 import {CodenvyOrganizationRoles} from './codenvy-organization-roles';
 
 interface IOrganizationsResource<T> extends ng.resource.IResourceClass<T> {
-  getOrganizations(): ng.resource.IResource<T>;
-  getUserOrganizations(data: { userId: string }): ng.resource.IResource<T>;
+  findOrganization(data: { name: string }): ng.resource.IResource<T>;
   createOrganization(data: { name: string, parent?: string }): ng.resource.IResource<T>;
   fetchOrganization(data: { id: string }): ng.resource.IResource<T>;
   deleteOrganization(data: { id: string }): ng.resource.IResource<T>;
   updateOrganization(data: { id: string }, organization: codenvy.IOrganization): ng.resource.IResource<T>;
   fetchSubOrganizations(data: { id: string }): ng.resource.IResource<T>;
 }
+
+const MAIN_URL = '/api/organization';
 
 /**
  * This class is handling the interactions with Organization management API.
@@ -39,17 +40,25 @@ export class CodenvyOrganization {
   private $q: ng.IQService;
   private lodash: any;
   /**
+   * Factory for PageObjectResource.
+   */
+  private chePageObject: any;
+  /**
    * Current user organization map by organization's id.
    */
-  private organizationsMap: Map<string, codenvy.IOrganization> = new Map();
+  private organizationsByIdMap: Map<string, codenvy.IOrganization> = new Map();
   /**
-   * User organization map by users's id.
+   * Current user organization map by organization's qualified name.
    */
-  private userOrganizationsMap: Map<string, Array<codenvy.IOrganization>> = new Map();
+  private organizationByNameMap: Map<string, codenvy.IOrganization> = new Map();
   /**
-   * Array of organizations.
+   * User organization page map by users's id.
    */
-  private organizations: Array<codenvy.IOrganization> = [];
+  private userOrganizationPageMap: Map<string, any> = new Map();
+  /**
+   * Array of current user organizations.
+   */
+  private currentUserOrganizations: Array<codenvy.IOrganization> = [];
   /**
    * Client for requesting Organization API.
    */
@@ -59,24 +68,50 @@ export class CodenvyOrganization {
    */
   private subOrganizationsMap: Map<string, Array<codenvy.IOrganization>> = new Map();
 
+  private cheUser: any;
+
+  private pageInfo: che.IPageInfo;
+
   /**
    * Default constructor that is using resource
    * @ngInject for Dependency injection
    */
-  constructor($resource: ng.resource.IResourceService, $q: ng.IQService, lodash: any) {
+  constructor($resource: ng.resource.IResourceService, $q: ng.IQService, cheUser: any, lodash: any, chePageObject: any) {
+    this.chePageObject = chePageObject;
     this.$resource = $resource;
-    this.$q = $q;
+    this.cheUser = cheUser;
     this.lodash = lodash;
+    this.$q = $q;
 
-    this.remoteOrganizationAPI = <IOrganizationsResource<any>>$resource('/api/organization', {}, {
-      getOrganizations: {method: 'GET', url: '/api/organization', isArray: true},
-      getUserOrganizations: {method: 'GET', url: '/api/organization?user=:userId', isArray: true},
-      fetchOrganization: {method: 'GET', url: '/api/organization/:id'},
-      createOrganization: {method: 'POST', url: '/api/organization'},
-      deleteOrganization: {method: 'DELETE', url: '/api/organization/:id'},
-      updateOrganization: {method: 'POST', url: '/api/organization/:id'},
-      fetchSubOrganizations: {method: 'GET', url: '/api/organization/:id/organizations', isArray: true}
+    this.remoteOrganizationAPI = <IOrganizationsResource<any>>$resource(MAIN_URL, {}, {
+      fetchOrganization: {method: 'GET', url: MAIN_URL + '/:id'},
+      createOrganization: {method: 'POST', url: MAIN_URL},
+      deleteOrganization: {method: 'DELETE', url: MAIN_URL + '/:id'},
+      updateOrganization: {method: 'POST', url: MAIN_URL + '/:id'},
+      fetchSubOrganizations: {method: 'GET', url: MAIN_URL + '/:id/organizations', isArray: true},
+      findOrganization: {method: 'GET', url: MAIN_URL + '/find?name=:name'}
     });
+  }
+
+  /**
+   * Requests organization by it's name.
+   *
+   * @param name the organization's name
+   * @returns {ng.IPromise<any>} result promise
+   */
+  fetchOrganizationByName(name: string): ng.IPromise<any> {
+    let promise = this.remoteOrganizationAPI.findOrganization({'name' : name}).$promise;
+    let resultPromise = promise.then((organization: codenvy.IOrganization) => {
+      this.organizationByNameMap.set(organization.qualifiedName, organization);
+      return organization;
+    }, (error: any) => {
+      if (error && error.status === 304) {
+        return this.getOrganizationByName(name);
+      }
+      return this.$q.reject(error);
+    });
+
+    return resultPromise;
   }
 
   /**
@@ -92,34 +127,8 @@ export class CodenvyOrganization {
       this.subOrganizationsMap.set(id, organizations);
       return organizations;
     }, (error: any) => {
-      if (error.status === 304) {
-        return this.subOrganizationsMap.get(id);
-      }
-      return this.$q.reject();
-    });
-
-    return resultPromise;
-  }
-
-  /**
-   * Request the list of available organizations for the current user.
-   *
-   * @returns {ng.IPromise<any>}
-   */
-  fetchOrganizations(): ng.IPromise<any> {
-    let promise = this.remoteOrganizationAPI.getOrganizations().$promise;
-
-    let resultPromise = promise.then((organizations: Array<codenvy.IOrganization>) => {
-      this.organizations.length = 0;
-      this.organizationsMap.clear();
-      organizations.forEach((organization: codenvy.IOrganization) => {
-        this.organizations.push(organization);
-        this.organizationsMap.set(organization.id, organization);
-      });
-      return this.organizations;
-    }, (error: any) => {
       if (error && error.status === 304) {
-        return this.organizations;
+        return this.subOrganizationsMap.get(id);
       }
       return this.$q.reject(error);
     });
@@ -128,31 +137,162 @@ export class CodenvyOrganization {
   }
 
   /**
-   * Request the list of available organizations for an user.
-   * @param userId {string}
+   * Request the list of current user organizations for the first page.
+   *
    * @returns {ng.IPromise<any>}
    */
-  fetchUserOrganizations(userId: string): ng.IPromise<any> {
-    let promise = this.remoteOrganizationAPI.getUserOrganizations({userId: userId}).$promise;
+  fetchOrganizations(maxItems?: number): ng.IPromise<any> {
+    let userDeferred = this.$q.defer();
+    let user: che.IUser = this.cheUser.getUser();
+    if (angular.isUndefined(user)) {
+      this.cheUser.fetchUser().then((user: che.IUser) => {
+        userDeferred.resolve(user);
+      }, (error: any) => {
+        userDeferred.reject(error);
+      });
+    } else {
+      userDeferred.resolve(user);
+    }
+
+    return userDeferred.promise.then((user: che.IUser) => {
+      let userOrganizationsPageObject = this._getUserOrganizationPage(user.id);
+      return this.fetchUserOrganizations(user.id, maxItems).then((organizations: Array<codenvy.IOrganization>) => {
+        this.pageInfo = userOrganizationsPageObject.getPagesInfo();
+        this._updateCurrentUserOrganizations(organizations);
+        return this.$q.when(organizations);
+      });
+    });
+  }
+
+  /**
+   * Request the list of current user organizations for a page depends on pageKey('first', 'prev', 'next', 'last').
+   * @param pageKey {string}
+   * @returns {ng.IPromise<any>}
+   */
+  fetchOrganizationPageObjects(pageKey?: string): ng.IPromise<any> {
+    let user: che.IUser = this.cheUser.getUser();
+    if (!user || !user.id) {
+      return this.$q.reject({data: {message: 'Error. No user object.'}});
+    }
+    let userOrganizationsPageObject = this._getUserOrganizationPage(user.id);
+
+    return userOrganizationsPageObject.fetchPageObjects(pageKey).then((organizations: Array<codenvy.IOrganization>) => {
+      this._updateCurrentUserOrganizations(organizations);
+      this.pageInfo = userOrganizationsPageObject.getPagesInfo();
+      return this.$q.when(this.currentUserOrganizations);
+    });
+  }
+
+  /**
+   * Returns the current user page info.
+   *
+   * @returns {che.IPageInfo}
+   */
+  getPageInfo(): che.IPageInfo {
+    return this.pageInfo;
+  }
+
+  /**
+   * Request the list of available organizations for an user.
+   * @param userId {string}
+   * @param maxItems {number}
+   * @returns {ng.IPromise<any>}
+   */
+  fetchUserOrganizations(userId: string, maxItems?: number): ng.IPromise<any> {
+    let userOrganizationsPageObject = this._getUserOrganizationPage(userId);
+
+    let promise = userOrganizationsPageObject.fetchObjects(maxItems);
 
     return promise.then((organizations: Array<codenvy.IOrganization>) => {
-      this.userOrganizationsMap.set(userId, organizations);
       return organizations;
     }, (error: any) => {
-      if (error && error.status === 304) {
-        return this.userOrganizationsMap.get(userId);
-      }
         return this.$q.reject(error);
     });
   }
 
   /**
-   * Returns the array of organizations.
+   * Request the list of user's organizations for a page depends on pageKey('first', 'prev', 'next', 'last').
+   * @param userId {string}
+   * @param pageKey {string}
+   * @returns {ng.IPromise<any>}
+   */
+  fetchUserOrganizationPageObjects(userId: string, pageKey: string): ng.IPromise<any> {
+    let userOrganizationsPageObject = this._getUserOrganizationPage(userId);
+
+    return userOrganizationsPageObject.fetchPageObjects(pageKey);
+  }
+
+  /**
+   * Returns the array of user's organizations.
+   * @param userId {string}
+   * @returns {Array<any>} the array of organizations
+   */
+  getUserOrganizations(userId: string): Array<any> {
+    let userOrganizationsPageObject = this._getUserOrganizationPage(userId);
+
+    return userOrganizationsPageObject.getPageObjects();
+  }
+
+  /**
+   * Returns the user's page info.
+   * @param userId {string}
+   * @returns {che.IPageInfo}
+   */
+  getUserOrganizationPageInfo(userId: string): che.IPageInfo {
+    let userOrganizationsPageObject = this._getUserOrganizationPage(userId);
+
+    return userOrganizationsPageObject.getPagesInfo();
+  }
+
+  /**
+   * Returns the user's request data.
+   * @param userId {string}
+   * @returns {che.IRequestData}
+   */
+  getUserOrganizationRequestData(userId: string): che.IRequestData {
+    let userOrganizationsPageObject = this._getUserOrganizationPage(userId);
+
+    return userOrganizationsPageObject.getRequestDataObject();
+  }
+
+  /**
+   * Update current user organizations objects
+   * @param organizations {Array<codenvy.IOrganization>}
+   * @private
+   */
+  _updateCurrentUserOrganizations(organizations: Array<codenvy.IOrganization>): void {
+    this.currentUserOrganizations.length = 0;
+    organizations.forEach((organization: codenvy.IOrganization) => {
+      this.currentUserOrganizations.push(organization);
+      this.organizationByNameMap.set(organization.qualifiedName, organization);
+      this.organizationsByIdMap.set(organization.id, organization);
+    });
+  }
+
+  /**
+   * Gets user's page object (create new or get existing one)
+   * @param userId
+   * @returns {any} - user's page object
+   * @private
+   */
+  _getUserOrganizationPage(userId: string): any {
+    let userOrganizationsPageObject: any;
+    if (!this.userOrganizationPageMap.has(userId)) {
+      userOrganizationsPageObject = this.chePageObject.createPageObjectResource(MAIN_URL, {user: userId}, 'id', this.organizationsByIdMap);
+      this.userOrganizationPageMap.set(userId, userOrganizationsPageObject);
+      return userOrganizationsPageObject;
+    }
+
+    return this.userOrganizationPageMap.get(userId);
+  }
+
+  /**
+   * Returns the array of current user organizations.
    *
    * @returns {Array<any>} the array of organizations
    */
   getOrganizations(): Array<any> {
-    return this.organizations;
+    return this.currentUserOrganizations;
   }
 
   /**
@@ -164,17 +304,15 @@ export class CodenvyOrganization {
   fetchOrganizationById(id: string): ng.IPromise<any> {
     let data = {'id': id};
     let promise = this.remoteOrganizationAPI.fetchOrganization(data).$promise;
-    let resultPromise = promise.then((organization: codenvy.IOrganization) => {
-      this.organizationsMap.set(id, organization);
+    return promise.then((organization: codenvy.IOrganization) => {
+      this.organizationsByIdMap.set(id, organization);
       return organization;
     }, (error: any) => {
       if (error.status === 304) {
-        return this.organizationsMap.get(id);
+        return this.organizationsByIdMap.get(id);
       }
       return this.$q.reject();
     });
-
-    return resultPromise;
   }
 
   /**
@@ -183,16 +321,19 @@ export class CodenvyOrganization {
    * @param id {string} organization's id
    * @returns {any} organization or <code>null</code> if not found
    */
-  getOrganizationById(id: string): any {
-    return this.organizationsMap.get(id);
+  getOrganizationById(id: string): codenvy.IOrganization {
+    return this.organizationsByIdMap.get(id);
   }
 
-  getOrganizationByName(name: string) {
-    return this.organizations.find((organization: codenvy.IOrganization) => {
-      return organization.qualifiedName === name;
-    });
+  /**
+   * Returns organization by it's name.
+   *
+   * @param name {string} organization's name
+   * @returns {any} organization or <code>null</code> if not found
+   */
+  getOrganizationByName(name: string): codenvy.IOrganization {
+    return this.organizationByNameMap.get(name);
   }
-
 
   /**
    * Creates new organization with pointed name.
@@ -217,7 +358,17 @@ export class CodenvyOrganization {
    */
   deleteOrganization(id: string): ng.IPromise<any> {
     let promise = this.remoteOrganizationAPI.deleteOrganization({'id': id}).$promise;
-    return promise;
+
+    return promise.then(() => {
+      if (this.organizationsByIdMap.has(id)) {
+        const {qualifiedName} = this.organizationsByIdMap.get(id);
+        this.organizationsByIdMap.delete(id);
+        if (this.organizationByNameMap.has(qualifiedName)) {
+          this.organizationByNameMap.delete(qualifiedName);
+        }
+      }
+      return this.$q.when();
+    });
   }
 
   /**

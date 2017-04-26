@@ -135,12 +135,12 @@ export class OrganizationSelectMembersDialogController {
     this.isLoading = true;
 
     this.availableUsers.forEach((user: IOrganizationMember) => {
-      const profile = this.cheProfile.getProfileFromId(user.id);
+      const profile = this.cheProfile.getProfileById(user.id);
       if (profile) {
         user.fullName = this.cheProfile.getFullName(profile.attributes);
       } else {
-        const promise = this.cheProfile.fetchProfileId(user.id).then(() => {
-          const profile = this.cheProfile.getProfileFromId(user.id);
+        const promise = this.cheProfile.fetchProfileById(user.id).then(() => {
+          const profile = this.cheProfile.getProfileById(user.id);
           user.fullName = this.cheProfile.getFullName(profile.attributes);
         });
         userProfilesPromises.push(promise);

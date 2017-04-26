@@ -105,42 +105,6 @@ describe('OrganizationsConfig >', () => {
       expect(callbacks.testReject).not.toHaveBeenCalled();
     });
 
-    it('should resolve route and return data if request for organizations list fails', () => {
-
-      const route = $route.routes['/admin/create-organization'];
-      const resolveBlock = route.resolve.initData;
-
-      // stub functions
-      const callbacks = {
-        testResolve: () => {
-        },
-        testReject: () => {
-        }
-      };
-
-      // create spies
-      spyOn(callbacks, 'testResolve');
-      spyOn(callbacks, 'testReject');
-
-      // make response for organizations list fail
-      $httpBackend.expect('GET', '/api/organization').respond(500, {message: 'response failed'});
-
-      const service = $injector.invoke(resolveBlock);
-
-      service
-        .then(callbacks.testResolve)
-        .catch(callbacks.testReject);
-
-      $httpBackend.flush();
-
-      expect(callbacks.testResolve).toHaveBeenCalledWith({
-        parentQualifiedName: '',
-        parentOrganizationId: '',
-        parentOrganizationMembers: []
-      });
-      expect(callbacks.testReject).not.toHaveBeenCalled();
-    });
-
   });
 
   describe('create sub-organization "/admin/create-organization/{parentId}" >', () => {
@@ -207,7 +171,7 @@ describe('OrganizationsConfig >', () => {
       spyOn(callbacks, 'testReject');
 
       // make response for organizations list fail
-      $httpBackend.expect('GET', '/api/organization').respond(500, {message: 'response failed'});
+      $httpBackend.expect('GET', /\/api\/organization(\?.*$)?/).respond(500, [], {message: 'response failed'});
 
       const service = $injector.invoke(resolveBlock);
 
@@ -322,7 +286,7 @@ describe('OrganizationsConfig >', () => {
       spyOn(callbacks, 'testReject');
 
       // make response for organizations list fail
-      $httpBackend.expect('GET', '/api/organization').respond(500, {message: 'response failed'});
+      $httpBackend.expect('GET', /\/api\/organization(\?.*$)?/).respond(500, [], {message: 'response failed'});
 
       const service = $injector.invoke(resolveBlock);
 
@@ -410,7 +374,7 @@ describe('OrganizationsConfig >', () => {
       spyOn(callbacks, 'testReject');
 
       // make response for organizations list fail
-      $httpBackend.expect('GET', '/api/organization').respond(500, {message: 'response failed'});
+      $httpBackend.expect('GET', /\/api\/organization(\?.*$)?/).respond(500, [], {message: 'response failed'});
 
       const service = $injector.invoke(resolveBlock);
 

@@ -40,6 +40,7 @@ export class ListOrganizations implements ng.IDirective {
   scope: any = {
     isLoading: '=?',
     organizations: '=',
+    hideAddButton: '=?',
     onUpdate: '&?onUpdate'
   };
 }

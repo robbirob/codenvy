@@ -14,9 +14,9 @@
  */
 'use strict';
 import {LicenseMessagesService} from '../../onprem/license-messages/license-messages.service';
-import {CodenvyLicense} from '../../../components/api/codenvy-license.factory';
 import {CodenvyOrganization} from '../../../components/api/codenvy-organizations.factory';
 
+const MAX_ITEMS = 12;
 
 /**
  * This class is handling the controller for the admins user management
@@ -26,18 +26,16 @@ export class AdminsUserManagementCtrl {
   $q: ng.IQService;
   $log: ng.ILogService;
   $mdDialog: ng.material.IDialogService;
+  $location: ng.ILocationService;
   cheUser: any;
-  codenvyLicense: CodenvyLicense;
   licenseMessagesService: LicenseMessagesService;
   cheNotification: any;
   pagesInfo: any;
   users: Array<any>;
   usersMap: Map<string, any>;
-  userFilter: {name: string};
+  userFilter: { name: string };
   usersSelectedStatus: Object;
   userOrderBy: string;
-  maxItems: number;
-  skipCount: number;
   isLoading: boolean;
   isNoSelected: boolean;
   isAllSelected: boolean;
@@ -45,19 +43,18 @@ export class AdminsUserManagementCtrl {
 
   private confirmDialogService: any;
   private codenvyOrganization: CodenvyOrganization;
-  private userOrganizationCount: {[userId: string]: number} = {};
+  private userOrganizationCount: { [userId: string]: number } = {};
 
   /**
    * Default constructor.
    * @ngInject for Dependency injection
    */
-  constructor($q: ng.IQService, $rootScope: che.IRootScopeService, $log: ng.ILogService, $mdDialog: ng.material.IDialogService, cheUser: any, codenvyLicense: CodenvyLicense,
-              cheNotification: any, licenseMessagesService: LicenseMessagesService, confirmDialogService: any, codenvyOrganization: CodenvyOrganization) {
+  constructor($q: ng.IQService, $log: ng.ILogService, $mdDialog: ng.material.IDialogService, cheUser: any, cheNotification: any, licenseMessagesService: LicenseMessagesService, confirmDialogService: any, codenvyOrganization: CodenvyOrganization, $rootScope: che.IRootScopeService, $location: ng.ILocationService) {
     this.$q = $q;
     this.$log = $log;
     this.$mdDialog = $mdDialog;
+    this.$location = $location;
     this.cheUser = cheUser;
-    this.codenvyLicense = codenvyLicense;
     this.codenvyOrganization = codenvyOrganization;
     this.cheNotification = cheNotification;
     this.licenseMessagesService = licenseMessagesService;
@@ -66,9 +63,6 @@ export class AdminsUserManagementCtrl {
     $rootScope.showIDE = false;
 
     this.isLoading = false;
-
-    this.maxItems = 12;
-    this.skipCount = 0;
 
     this.users = [];
     this.usersMap = this.cheUser.getUsersMap();
@@ -84,7 +78,7 @@ export class AdminsUserManagementCtrl {
       this.updateUsers();
     } else {
       this.isLoading = true;
-      this.cheUser.fetchUsers(this.maxItems, this.skipCount).then(() => {
+      this.cheUser.fetchUsers(MAX_ITEMS, 0).then(() => {
         this.isLoading = false;
         this.updateUsers();
       }, (error: any) => {
@@ -99,19 +93,21 @@ export class AdminsUserManagementCtrl {
   }
 
   /**
-   * Fetch user's organizations
+   * Redirect to user details
+   * @param userId {string}
+   * @param tab {string}
+   */
+  redirectToUserDetails(userId: string, tab?: string): void {
+    this.$location.path('/admin/userdetails/' + userId).search(!tab ? {} : {tab: tab});
+  }
+
+  /**
+   * Update user's organizations count
    * @param userId {string}
    */
-  fetchUserOrganizations(userId: string): void {
-    let currentUser: che.IUser = this.cheUser.getUser();
-    if (currentUser && currentUser.id === userId) {
-      this.codenvyOrganization.fetchOrganizations().then((organizations: Array<any>) => {
-        this.userOrganizationCount[userId] = organizations.length;
-      });
-      return;
-    }
-    this.codenvyOrganization.fetchUserOrganizations(userId).then((organizations: Array<any>) => {
-      this.userOrganizationCount[userId] = organizations.length;
+  updateUserOrganizationsCount(userId: string): void {
+    this.codenvyOrganization.fetchUserOrganizations(userId, 1).then(() => {
+      this.userOrganizationCount[userId] = this.codenvyOrganization.getUserOrganizationPageInfo(userId).countPages;
     });
   }
 
@@ -186,7 +182,6 @@ export class AdminsUserManagementCtrl {
       let promise = this.cheUser.deleteUserById(user.id);
       promise.then(() => {
         this.isLoading = false;
-        this.codenvyLicense.fetchLicenseLegality();//fetch license legality
         this.updateUsers();
         this.licenseMessagesService.fetchMessages();
       }, (error: any) => {
@@ -251,14 +246,12 @@ export class AdminsUserManagementCtrl {
           this.isLoading = false;
           this.updateUsers();
           this.updateSelectedStatus();
-          this.codenvyLicense.fetchLicenseLegality();//fetch license legality
           this.licenseMessagesService.fetchMessages();
         }, (error: any) => {
           this.isLoading = false;
           this.$log.error(error);
         });
         if (isError) {
-          //TODO process error message
           this.cheNotification.showError('Delete failed.');
         } else {
           if (numberToDelete === 1) {

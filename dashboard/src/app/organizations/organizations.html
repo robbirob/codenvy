@@ -9,5 +9,8 @@
   <md-content flex class="organizations-content" ng-show="!organizationsController.isInfoLoading">
     <list-organizations on-update="organizationsController.fetchOrganizations()"
                         organizations="organizationsController.getOrganizations()"></list-organizations>
+    <che-paging-buttons ng-if="organizationsController.pageInfo"
+                        pages-info="organizationsController.pageInfo"
+                        fetch-page="organizationsController.fetchOrganizations(key)"></che-paging-buttons>
   </md-content>
 </md-content>

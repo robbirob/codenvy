@@ -106,9 +106,9 @@ export class ListOrganizationsController {
    */
   private parentId: string;
   /**
-   * User order by.
+   * Organization order by.
    */
-  private userOrderBy: string;
+  private organizationOrderBy: string;
   /**
    * Organization filter.
    */
@@ -132,7 +132,7 @@ export class ListOrganizationsController {
 
     this.parentName = $route.current.params.organizationName;
     this.isNoSelected = true;
-    this.userOrderBy = 'name';
+    this.organizationOrderBy = 'name';
     this.organizationFilter = {name: ''};
     this.organizationsSelectedStatus = {};
 

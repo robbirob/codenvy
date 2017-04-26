@@ -117,17 +117,17 @@ export class AddMemberController {
         continue;
       }
 
-      let user = this.cheProfile.getProfileFromId(userId);
+      let user = this.cheProfile.getProfileById(userId);
 
       if (user) {
         this.formUserItem(user, permission);
       } else {
-        let promise = this.cheProfile.fetchProfileId(userId).then(() => {
-          this.formUserItem(this.cheProfile.getProfileFromId(userId), permission);
+        let promise = this.cheProfile.fetchProfileById(userId).then(() => {
+          this.formUserItem(this.cheProfile.getProfileById(userId), permission);
         });
         promises.push(promise);
       }
-    };
+    }
 
     this.$q.all(promises).finally(() => {
       this.isLoading = false;

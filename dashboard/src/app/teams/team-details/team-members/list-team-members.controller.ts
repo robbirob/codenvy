@@ -200,7 +200,7 @@ export class ListTeamMembersController {
 
     permissions.forEach((permission: any) => {
       let userId = permission.userId;
-      let user = this.cheProfile.getProfileFromId(userId);
+      let user = this.cheProfile.getProfileById(userId);
 
       if (userId === this.owner.id) {
         noOwnerPermissions = false;
@@ -209,20 +209,20 @@ export class ListTeamMembersController {
       if (user) {
         this.formUserItem(user, permission);
       } else {
-        this.cheProfile.fetchProfileId(userId).then(() => {
-          this.formUserItem(this.cheProfile.getProfileFromId(userId), permission);
+        this.cheProfile.fetchProfileById(userId).then(() => {
+          this.formUserItem(this.cheProfile.getProfileById(userId), permission);
         });
       }
     });
 
     if (noOwnerPermissions) {
-      let user = this.cheProfile.getProfileFromId(this.owner.id);
+      let user = this.cheProfile.getProfileById(this.owner.id);
 
       if (user) {
         this.formUserItem(user, null);
       } else {
-        this.cheProfile.fetchProfileId(this.owner.id).then(() => {
-          this.formUserItem(this.cheProfile.getProfileFromId(this.owner.id), null);
+        this.cheProfile.fetchProfileById(this.owner.id).then(() => {
+          this.formUserItem(this.cheProfile.getProfileById(this.owner.id), null);
         });
       }
     }
@@ -522,10 +522,7 @@ export class ListTeamMembersController {
           continue;
         }
 
-        let promise = this.codenvyPermissions.removeOrganizationPermissions(this.team.id, id).then(() => {
-            ng.noop();
-          },
-          (error: any) => {
+        let promise = this.codenvyPermissions.removeOrganizationPermissions(this.team.id, id).catch((error: any) => {
             removalError = error;
         });
         removeMembersPromises.push(promise);

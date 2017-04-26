@@ -86,12 +86,12 @@ export class ListTeamOwnersController {
     if (!this.owner) {
       return;
     }
-    let profile = this.cheProfile.getProfileFromId(this.owner.id);
+    let profile = this.cheProfile.getProfileById(this.owner.id);
     if (profile) {
       this.formUserItem(profile);
     } else {
-      this.cheProfile.fetchProfileId(this.owner.id).then(() => {
-        this.formUserItem(this.cheProfile.getProfileFromId(this.owner.id));
+      this.cheProfile.fetchProfileById(this.owner.id).then(() => {
+        this.formUserItem(this.cheProfile.getProfileById(this.owner.id));
       });
     }
   }

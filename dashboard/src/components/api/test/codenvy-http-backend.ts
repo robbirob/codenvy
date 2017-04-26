@@ -94,7 +94,7 @@ export class CodenvyHttpBackend {
       allTeams.push(team);
     }
 
-    this.httpBackend.when('GET', '/api/organization').respond(allTeams);
+    this.httpBackend.when('GET', /\/api\/organization(\?.*$)?/).respond(allTeams);
   }
 
   /**
@@ -115,13 +115,14 @@ export class CodenvyHttpBackend {
     for (let key of organizationKeys) {
       const organization = this.organizationsMap.get(key);
       this.httpBackend.when('GET', '/api/organization/' + organization.id).respond(organization);
+      this.httpBackend.when('GET', '/api/organization/find?name=' + encodeURIComponent(organization.qualifiedName)).respond(organization);
       this.httpBackend.when('DELETE', '/api/organization/' + organization.id).respond(() => {
         return [200, {success: true, errors: []}];
       });
       allOrganizations.push(organization);
     }
-
-    this.httpBackend.when('GET', '/api/organization').respond(allOrganizations);
+    this.httpBackend.when('GET', /^\/api\/organization\/find\?name=.*$/).respond(404, {}, {message: 'Organization is not found.'});
+    this.httpBackend.when('GET', /\/api\/organization(\?.*$)?/).respond(allOrganizations);
   }
 
   /**

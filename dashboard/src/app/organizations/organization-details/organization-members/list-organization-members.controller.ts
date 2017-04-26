@@ -131,7 +131,6 @@ export class ListOrganizationMembersController {
     this.organizationsPermissionService = organizationsPermissionService;
 
     this.members = [];
-    this.isLoading = false;
 
     this.memberFilter = {name: ''};
 
@@ -146,22 +145,17 @@ export class ListOrganizationMembersController {
    * Fetches the list of organization members.
    */
   fetchMembers(): void {
-    if (!this.organization) {
+    if (!this.organization || !this.organization.id) {
       return;
     }
-    let permissions = this.codenvyPermissions.getOrganizationPermissions(this.organization.id);
-    if (permissions && permissions.length) {
-      this.isLoading = false;
-      this.formUsersList();
-    } else {
-      this.isLoading = true;
-    }
+    this.isLoading = true;
     this.codenvyPermissions.fetchOrganizationPermissions(this.organization.id).then(() => {
-      this.isLoading = false;
       this.formUsersList();
     }, (error: any) => {
+      let errorMessage = error && error.data && error.data.message ? error.data.message : 'Failed to retrieve organization permissions.'
+      this.cheNotification.showError(errorMessage);
+    }).finally(() => {
       this.isLoading = false;
-      this.cheNotification.showError(error.data && error.data.message ? error.data.message : 'Failed to retrieve organization permissions.');
     });
   }
 
@@ -174,13 +168,13 @@ export class ListOrganizationMembersController {
 
     permissions.forEach((permission: any) => {
       let userId = permission.userId;
-      let userProfile = this.cheProfile.getProfileFromId(userId);
+      let userProfile = this.cheProfile.getProfileById(userId);
 
       if (userProfile) {
         this.formUserItem(userProfile, permission);
       } else {
-        this.cheProfile.fetchProfileId(userId).then(() => {
-          this.formUserItem(this.cheProfile.getProfileFromId(userId), permission);
+        this.cheProfile.fetchProfileById(userId).then(() => {
+          this.formUserItem(this.cheProfile.getProfileById(userId), permission);
         });
       }
     });

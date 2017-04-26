@@ -113,12 +113,11 @@ export class OrganizationsConfigService {
    */
   getOrFetchOrganizationByName(name: string): ng.IPromise<any> {
     const defer = this.$q.defer();
-
     const organization = this.codenvyOrganization.getOrganizationByName(name);
     if (organization) {
       defer.resolve(organization);
     } else {
-      this.codenvyOrganization.fetchOrganizations().then(() => {
+      this.codenvyOrganization.fetchOrganizationByName(name).then(() => {
         const organization = this.codenvyOrganization.getOrganizationByName(name);
         if (!organization) {
           this.logError(`Organization "${name}" is not found.`);
@@ -244,7 +243,6 @@ export class OrganizationsConfigService {
    */
   resolveOrganizationDetailsRoute(): ng.IPromise<any> {
     const name = this.$route.current.params.organizationName;
-
     const organizationPromise = this.getOrFetchOrganizationByName(name);
 
     // get current organization permissions
@@ -315,9 +313,11 @@ export class OrganizationsConfigService {
     const parentMembersDefer = this.$q.defer();
 
     parentQualifiedNameDefer.resolve(this.$route.current.params.parentQualifiedName || '');
-    parentQualifiedNameDefer.promise.then(
-      (name: string) => {
-        return this.getOrFetchOrganizationByName(name);
+    parentQualifiedNameDefer.promise.then((name: string) => {
+        if (name) {
+          return this.getOrFetchOrganizationByName(name);
+        }
+        return this.$q.reject('Cannot get parent for root organization');
       }
     ).then(
       /* resolve parent organization ID */

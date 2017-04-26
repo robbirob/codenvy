@@ -15,6 +15,7 @@
 'use strict';
 import {CodenvyAPI} from '../../components/api/codenvy-api.factory';
 import {CodenvyPermissions} from '../../components/api/codenvy-permissions.factory';
+import {CodenvyOrganization} from '../../components/api/codenvy-organizations.factory';
 
 export class CodenvyNavBarController {
   menuItemUrl = {
@@ -129,7 +130,6 @@ export class CodenvyNavBarController {
 
     cheAPI.cheWorkspace.fetchWorkspaces();
     this.userServices = this.codenvyPermissions.getUserServices();
-    this.organizations = this.codenvyAPI.getOrganization().getOrganizations();
     if (this.codenvyPermissions.getSystemPermissions()) {
       this.updateData();
     } else {
@@ -143,16 +143,14 @@ export class CodenvyNavBarController {
    * Update data.
    */
   updateData(): void {
-    this.codenvyAPI.getOrganization().fetchOrganizations().then(() => {
-      if (this.organizations) {
-        let user = this.cheAPI.getUser().getUser();
-        let personalAccount = this.organizations.find((organization: any) => {
-          return organization.qualifiedName === user.name;
-        });
-        this.hasPersonalAccount = !angular.isUndefined(personalAccount);
-      }
+    let organization: CodenvyOrganization = this.codenvyAPI.getOrganization();
+    organization.fetchOrganizations().then(() => {
+      this.organizations = organization.getOrganizations();
+      let user: che.IUser = this.cheAPI.getUser().getUser();
+      organization.fetchOrganizationByName(user.name).finally(() => {
+        this.hasPersonalAccount = angular.isDefined(organization.getOrganizationByName(user.name));
+      });
     });
-
   }
 
   reload(): void {

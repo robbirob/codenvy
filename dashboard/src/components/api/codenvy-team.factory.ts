@@ -125,18 +125,7 @@ export class CodenvyTeam {
   fetchTeams(): ng.IPromise<any> {
     let defer = this.$q.defer();
 
-    let userPromise = this.cheUser.fetchUser();
-
-    let teamsPromise = userPromise.then(() => {
-      return this.codenvyOrganization.fetchOrganizations();
-    }, (error: any) => {
-      if (error.status === 304) {
-        return this.codenvyOrganization.getOrganizations();
-      }
-      return this.$q.reject(error);
-    });
-
-    teamsPromise.then((teams: any[]) => {
+    this.codenvyOrganization.fetchOrganizations().then((teams: any[]) => {
       this.processTeams(teams, this.cheUser.getUser());
       defer.resolve();
     }, (error: any) => {

@@ -13,9 +13,11 @@
  * from Codenvy S.A..
  */
 'use strict';
-import {CodenvyTeamEventsManager} from '../../components/api/codenvy-team-events-manager.factory';
 import {CodenvyOrganization} from '../../components/api/codenvy-organizations.factory';
 import {CodenvyPermissions} from '../../components/api/codenvy-permissions.factory';
+import {CodenvyTeamEventsManager} from '../../components/api/codenvy-team-events-manager.factory';
+
+const MAX_ITEMS = 12;
 
 /**
  * @ngdoc controller
@@ -28,10 +30,6 @@ export class OrganizationsController {
    * Promises service.
    */
   private $q: ng.IQService;
-  /**
-   * Permissions service.
-   */
-  private codenvyPermissions: CodenvyPermissions;
   /**
    * Organization API interaction.
    */
@@ -48,7 +46,14 @@ export class OrganizationsController {
    * List of organizations.
    */
   private organizations: Array<any> = [];
-
+  /**
+   * Page info object.
+   */
+  private pageInfo: che.IPageInfo;
+  /**
+   * Has admin user service.
+   */
+  private hasAdminUserService: boolean;
 
   /**
    * Default constructor that is using resource
@@ -60,9 +65,10 @@ export class OrganizationsController {
     this.codenvyOrganization = codenvyOrganization;
     this.cheNotification = cheNotification;
     this.$q = $q;
-    this.codenvyPermissions = codenvyPermissions;
-    $rootScope.showIDE = false;
 
+    (<any>$rootScope).showIDE = false;
+
+    this.hasAdminUserService = codenvyPermissions.getUserServices().hasAdminUserService;
     let refreshHandler = () => {
       this.fetchOrganizations();
     };
@@ -78,27 +84,38 @@ export class OrganizationsController {
 
   /**
    * Fetches the list of root organizations.
+   * @param pageKey {string}
    */
-  fetchOrganizations(): void {
+  fetchOrganizations(pageKey?: string): void {
     this.isInfoLoading = true;
-    this.codenvyOrganization.fetchOrganizations().then(() => {
-      this.isInfoLoading = false;
-      this._updateOrganizationList(this.codenvyOrganization.getOrganizations());
+    let promise: ng.IPromise<Array<codenvy.IOrganization>>;
+    if (angular.isDefined(pageKey)) {
+      promise = this.codenvyOrganization.fetchOrganizationPageObjects(pageKey);
+    } else {
+      // todo remove admin's condition after adding query search to server side
+      promise = this.codenvyOrganization.fetchOrganizations(!this.hasAdminUserService ? MAX_ITEMS : 30);
+    }
+
+    promise.then((userOrganizations: Array<codenvy.IOrganization>) => {
+      this.pageInfo = angular.copy(this.codenvyOrganization.getPageInfo());
+      this._updateOrganizationList(userOrganizations);
     }, (error: any) => {
-      this.isInfoLoading = false;
       let message = error.data && error.data.message ? error.data.message : 'Failed to retrieve organizations.';
       this.cheNotification.showError(message);
+    }).finally(() => {
+      this.isInfoLoading = false;
     });
   }
 
   _updateOrganizationList(organizations: Array<codenvy.IOrganization>): void {
-    if (!this.codenvyPermissions.getUserServices().hasAdminUserService) {
-      this.organizations = organizations;
-    } else {
+    // todo remove this admin's condition after adding query search to server side
+    if (this.hasAdminUserService) {
       this.organizations = organizations.filter((organization: codenvy.IOrganization) => {
         return !organization.parent;
       });
+      return;
     }
+    this.organizations = organizations;
   }
 
   /**
