@@ -17,6 +17,7 @@ package com.codenvy.machine.backup;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.machine.MachineStatus;
+import org.eclipse.che.api.environment.server.exception.EnvironmentException;
 import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineRuntimeInfoImpl;
 import org.eclipse.che.api.machine.server.model.impl.ServerImpl;
@@ -28,6 +29,7 @@ import org.eclipse.che.plugin.docker.client.Exec;
 import org.eclipse.che.plugin.docker.client.LogMessage;
 import org.eclipse.che.plugin.docker.client.MessageProcessor;
 import org.eclipse.che.plugin.docker.client.json.ContainerInfo;
+import org.eclipse.che.plugin.docker.client.json.ContainerState;
 import org.eclipse.che.plugin.docker.client.json.NetworkSettings;
 import org.eclipse.che.plugin.docker.client.json.PortBinding;
 import org.eclipse.che.plugin.docker.client.params.CreateExecParams;
@@ -211,6 +213,9 @@ public class DockerEnvironmentBackupManagerTest {
                                               singletonList(new PortBinding().withHostPort(PUBLISHED_SSH_PORT))));
         ContainerInfo containerInfo = new ContainerInfo();
         containerInfo.setNetworkSettings(networkSettings);
+        ContainerState containerState = new ContainerState();
+        containerState.setRunning(true);
+        containerInfo.setState(containerState);
         when(docker.inspectContainer(eq(CONTAINER_ID))).thenReturn(containerInfo);
 
         executor = Executors.newFixedThreadPool(5);
@@ -320,9 +325,7 @@ public class DockerEnvironmentBackupManagerTest {
                 .thenReturn(singletonMap("23/tcp", new ServerImpl("ref", "proto", "127.0.0.1:" + PUBLISHED_SSH_PORT,
                                                                   null, null)));
 
-        backupManager.restoreWorkspaceBackup(WORKSPACE_ID,
-                                             CONTAINER_ID,
-                                             NODE_HOST);
+        backupManager.backupWorkspace(WORKSPACE_ID);
 
         // when
         backupManager.backupWorkspace(WORKSPACE_ID);
@@ -367,7 +370,7 @@ public class DockerEnvironmentBackupManagerTest {
         assertArrayEquals(RESTORE_WORKSPACE_COMMAND, command);
     }
 
-    @Test
+    @Test(timeOut = 2_000 * 60) // 2 minutes
     public void shouldIgnoreNewBackupRequestIfPreviousOneHasBeenJustStarted() throws Exception {
         // given
         injectWorkspaceLock(WORKSPACE_ID);
@@ -387,7 +390,7 @@ public class DockerEnvironmentBackupManagerTest {
                                                        anySetOf(Integer.class));
     }
 
-    @Test
+    @Test(timeOut = 2_000 * 60) // 2 minutes
     public void shouldIgnoreAllNewBackupRequestsIfOldHasNotFinishedYet() throws Exception {
         // given
         injectWorkspaceLock(WORKSPACE_ID);
@@ -409,7 +412,8 @@ public class DockerEnvironmentBackupManagerTest {
 
     @Test(expectedExceptions = ServerException.class,
           expectedExceptionsMessageRegExp = "Restore of workspace " + WORKSPACE_ID +
-                                            " failed. Another restore process of the same workspace is in progress")
+                                            " failed. Another restore process of the same workspace is in progress",
+          timeOut = 2_000 * 60) // 2 minutes
     public void throwsExceptionOnNewRestoreIfAnotherOneIsInProgress() throws Exception {
         // given
         ThreadFreezer restoreFreezer = startNewProcessAndFreeze(this::runRestore);
@@ -438,7 +442,8 @@ public class DockerEnvironmentBackupManagerTest {
      */
     @Test(expectedExceptions = ServerException.class,
           expectedExceptionsMessageRegExp = "Restore of workspace " + WORKSPACE_ID +
-                                            " failed. Another restore process of the same workspace is in progress")
+                                            " failed. Another restore process of the same workspace is in progress",
+          timeOut = 2_000 * 60) // 2 minutes
     public void throwsExceptionOnNewRestoreIfAnotherOneIsInProgressAndAnotherRestoreFailed() throws Exception {
         // given
         ThreadFreezer restoreFreezer = startNewProcessAndFreeze(this::runRestore);
@@ -525,7 +530,7 @@ public class DockerEnvironmentBackupManagerTest {
                                              NODE_HOST);
     }
 
-    @Test
+    @Test(timeOut = 2_000 * 60) // 2 minutes
     public void shouldThrowExceptionWhenStartRestoreIfBackupHasNotFinishedYet() throws Exception {
         // given
         injectWorkspaceLock(WORKSPACE_ID);
@@ -561,6 +566,9 @@ public class DockerEnvironmentBackupManagerTest {
                                               singletonList(new PortBinding().withHostPort(PUBLISHED_SSH_PORT))));
         ContainerInfo containerInfo = new ContainerInfo();
         containerInfo.setNetworkSettings(networkSettings);
+        ContainerState containerState = new ContainerState();
+        containerState.setRunning(true);
+        containerInfo.setState(containerState);
         when(docker.inspectContainer(eq(CONTAINER_ID))).thenReturn(containerInfo);
 
         // when
@@ -569,7 +577,27 @@ public class DockerEnvironmentBackupManagerTest {
                                              NODE_HOST);
     }
 
-    @Test
+    @Test(expectedExceptions = EnvironmentException.class,
+          expectedExceptionsMessageRegExp = "Container " + CONTAINER_ID + " unexpectedly exited")
+    public void restoreShouldThrowEnvironmentErrorIfContainerIsNoLongerRunning() throws Exception {
+        // given
+        NetworkSettings networkSettings = new NetworkSettings();
+        networkSettings.setPorts(singletonMap("22/tcp",
+                                              singletonList(new PortBinding().withHostPort(PUBLISHED_SSH_PORT))));
+        ContainerInfo containerInfo = new ContainerInfo();
+        containerInfo.setNetworkSettings(networkSettings);
+        ContainerState containerState = new ContainerState();
+        containerState.setRunning(false);
+        containerInfo.setState(containerState);
+        when(docker.inspectContainer(eq(CONTAINER_ID))).thenReturn(containerInfo);
+
+        // when
+        backupManager.restoreWorkspaceBackup(WORKSPACE_ID,
+                                             CONTAINER_ID,
+                                             NODE_HOST);
+    }
+
+    @Test(timeOut = 2_000 * 60) // 2 minutes
     public void shouldIgnoreOthersBackupsAndFailOnRestoresWhileBackupInProgress() throws Exception {
         // given
         injectWorkspaceLock(WORKSPACE_ID);
@@ -598,7 +626,7 @@ public class DockerEnvironmentBackupManagerTest {
     }
 
 
-    @Test
+    @Test(timeOut = 2_000 * 60) // 2 minutes
     public void shouldIgnoreOthersBackupsAndFailOnRestoresWhileRestoreInProgress() throws Exception {
         // given
         ThreadFreezer restoreFreezer = startNewProcessAndFreeze(this::runRestore);
@@ -625,7 +653,7 @@ public class DockerEnvironmentBackupManagerTest {
         assertEquals(cmdCaptor.getValue()[0], RESTORE_SCRIPT);
     }
 
-    @Test
+    @Test(timeOut = 2_000 * 60) // 2 minutes
     public void shouldIgnoreBackupIfRestoreHasNotFinishedYet() throws Exception {
         // given
         ThreadFreezer restoreFreezer = startNewProcessAndFreeze(this::runRestore);
@@ -645,7 +673,7 @@ public class DockerEnvironmentBackupManagerTest {
         assertEquals(cmdCaptor.getValue()[0], RESTORE_SCRIPT);
     }
 
-    @Test
+    @Test(timeOut = 2_000 * 60) // 2 minutes
     public void shouldProcessOnlyOneBackupAtTheSameTime() throws Exception {
         // given
         injectWorkspaceLock(WORKSPACE_ID);
@@ -675,7 +703,7 @@ public class DockerEnvironmentBackupManagerTest {
                                                 NODE_HOST);
     }
 
-    @Test
+    @Test(timeOut = 2_000 * 60) // 2 minutes
     public void shouldQueuedBackupWithCleanupAfterBackup() throws Exception {
         // given
         injectWorkspaceLock(WORKSPACE_ID);
@@ -725,7 +753,8 @@ public class DockerEnvironmentBackupManagerTest {
             backupManager.backupWorkspaceAndCleanup(WORKSPACE_ID,
                                                     CONTAINER_ID,
                                                     NODE_HOST);
-        } catch (RuntimeException ignored) {}
+        } catch (RuntimeException ignored) {
+        }
 
         // when
         backupManager.restoreWorkspaceBackup(WORKSPACE_ID,
@@ -742,6 +771,9 @@ public class DockerEnvironmentBackupManagerTest {
                                               singletonList(new PortBinding().withHostPort(PUBLISHED_SSH_PORT))));
         ContainerInfo containerInfo = new ContainerInfo();
         containerInfo.setNetworkSettings(networkSettings);
+        ContainerState containerState = new ContainerState();
+        containerState.setRunning(true);
+        containerInfo.setState(containerState);
         when(docker.inspectContainer(eq(CONTAINER_ID))).thenReturn(containerInfo);
 
         backupManager.restoreWorkspaceBackup(WORKSPACE_ID,
@@ -754,7 +786,31 @@ public class DockerEnvironmentBackupManagerTest {
                                                 NODE_HOST);
     }
 
-    @Test
+    @Test(expectedExceptions = EnvironmentException.class,
+          expectedExceptionsMessageRegExp = "Container " + CONTAINER_ID + " unexpectedly exited")
+    public void cleanupShouldThrowEnvironmentErrorIfContainerIsNoLongerRunning() throws Exception {
+        // given
+        NetworkSettings networkSettings = new NetworkSettings();
+        networkSettings.setPorts(singletonMap("22/tcp",
+                                              singletonList(new PortBinding().withHostPort(PUBLISHED_SSH_PORT))));
+        ContainerInfo containerInfo = new ContainerInfo();
+        containerInfo.setNetworkSettings(networkSettings);
+        ContainerState containerState = new ContainerState();
+        containerState.setRunning(false);
+        containerInfo.setState(containerState);
+        when(docker.inspectContainer(eq(CONTAINER_ID))).thenReturn(containerInfo);
+
+        backupManager.restoreWorkspaceBackup(WORKSPACE_ID,
+                                             CONTAINER_ID,
+                                             NODE_HOST);
+
+        // when
+        backupManager.backupWorkspaceAndCleanup(WORKSPACE_ID,
+                                                CONTAINER_ID,
+                                                NODE_HOST);
+    }
+
+    @Test(timeOut = 2_000 * 60) // 2 minutes
     public void shouldBackupWithCleanupAfterFinishOfCurrentBackupButNotStartAnotherBackup()
             throws Exception {
         // given
@@ -779,7 +835,7 @@ public class DockerEnvironmentBackupManagerTest {
         assertEquals(cmdCaptor.getValue()[0], BACKUP_SCRIPT);
     }
 
-    @Test
+    @Test(timeOut = 2_000 * 60) // 2 minutes
     public void shouldIgnoreAllBackupsAndFailOnRestoresWhileBackupWithCleanupInQueueAfterBackup() throws Exception {
         // given
         injectWorkspaceLock(WORKSPACE_ID);
@@ -866,7 +922,7 @@ public class DockerEnvironmentBackupManagerTest {
             backupManager.backupWorkspaceAndCleanup(WORKSPACE_ID,
                                                     CONTAINER_ID,
                                                     NODE_HOST);
-        } catch (ServerException e) {
+        } catch (ServerException | EnvironmentException e) {
             LOG.error(e.getMessage());
         }
     }
@@ -876,7 +932,7 @@ public class DockerEnvironmentBackupManagerTest {
             backupManager.restoreWorkspaceBackup(WORKSPACE_ID,
                                                  CONTAINER_ID,
                                                  NODE_HOST);
-        } catch (ServerException e) {
+        } catch (ServerException | EnvironmentException e) {
             LOG.error(e.getMessage());
         }
     }
