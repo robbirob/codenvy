@@ -20,7 +20,7 @@
     <parent>
         <artifactId>onpremises-assembly-parent</artifactId>
         <groupId>com.codenvy.onpremises</groupId>
-        <version>5.9.1-SNAPSHOT</version>
+        <version>5.9.1</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <artifactId>codenvy-ide-core</artifactId>
