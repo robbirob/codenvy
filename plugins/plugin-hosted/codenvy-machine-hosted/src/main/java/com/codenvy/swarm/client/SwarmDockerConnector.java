@@ -65,8 +65,9 @@ import static org.slf4j.LoggerFactory.getLogger;
 @Singleton
 public class SwarmDockerConnector extends DockerConnector {
     private static final Logger LOG = getLogger(SwarmDockerConnector.class);
-    private static final Pattern IMAGE_NOT_FOUND_BY_SWARM_ERROR_MESSAGE =
-            Pattern.compile("^Error: image .* not found.*", Pattern.DOTALL);
+    private static final Pattern IMAGE_NOT_FOUND_BY_SWARM_ERROR_MESSAGE = Pattern.compile("^Error: image .* not found.*", Pattern.DOTALL);
+    private static final Pattern REPOSITORY_NOT_FOUND_BY_SWARM_ERROR_MESSAGE =
+            Pattern.compile(".*repository .* not found: does not exist or no pull access.*", Pattern.DOTALL);
 
     private final NodeSelectionStrategy   strategy;
     //TODO should it be done in other way?
@@ -118,8 +119,10 @@ public class SwarmDockerConnector extends DockerConnector {
             return super.createContainer(params);
         } catch (DockerException e) {
             // TODO fix this workaround. Is needed for https://github.com/codenvy/codenvy/issues/1215
+            // and https://github.com/codenvy/codenvy/issues/2144
             if (e.getStatus() == 500 &&
-                IMAGE_NOT_FOUND_BY_SWARM_ERROR_MESSAGE.matcher(e.getOriginError()).matches()) { // if swarm failed to see image
+                (IMAGE_NOT_FOUND_BY_SWARM_ERROR_MESSAGE.matcher(e.getOriginError()).matches() || // if swarm failed to see image
+                REPOSITORY_NOT_FOUND_BY_SWARM_ERROR_MESSAGE.matcher(e.getOriginError()).matches())) { // failed to interact with repository
                 try {
                     Thread.sleep(5000);                   // wait a bit
                     return super.createContainer(params); // and retry after pause
