@@ -94,8 +94,7 @@ public class SuborganizationResourcesProvider implements ResourcesProvider {
                                                                accountId,
                                                                -1L,
                                                                -1L,
-                                                               cap(parentTotalResources,
-                                                                   resourcesCaps)));
+                                                               cap(parentTotalResources, resourcesCaps)));
             } catch (ConflictException e) {
                 throw new ServerException(e.getLocalizedMessage());
             }
@@ -106,8 +105,7 @@ public class SuborganizationResourcesProvider implements ResourcesProvider {
 
     private List<ResourceImpl> cap(Collection<? extends Resource> source, List<? extends Resource> caps) {
         final Map<String, Resource> resourcesCaps = caps.stream()
-                                                        .collect(toMap(Resource::getType,
-                                                                       Function.identity()));
+                                                        .collect(toMap(Resource::getType, Function.identity()));
         return source.stream()
                      .map(resource -> {
                          Resource resourceCap = resourcesCaps.get(resource.getType());
