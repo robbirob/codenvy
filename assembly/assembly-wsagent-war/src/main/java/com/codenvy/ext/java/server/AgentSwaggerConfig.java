@@ -16,7 +16,6 @@ package com.codenvy.ext.java.server;
 
 
 import io.swagger.jaxrs.config.BeanConfig;
-import io.swagger.jaxrs.config.DefaultJaxrsConfig;
 import io.swagger.jaxrs.config.SwaggerContextService;
 
 import org.slf4j.Logger;
@@ -27,6 +26,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -36,7 +36,7 @@ import java.net.URL;
  * @author Max Shaposhnik (mshaposhnik@codenvy.com)
  */
 @Singleton
-public class AgentSwaggerConfig extends DefaultJaxrsConfig {
+public class AgentSwaggerConfig extends HttpServlet {
 
     private static final Logger LOG = LoggerFactory.getLogger(AgentSwaggerConfig.class);
 
