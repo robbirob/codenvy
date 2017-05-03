@@ -23,12 +23,12 @@ import io.swagger.annotations.ApiResponses;
 import org.eclipse.che.api.core.BadRequestException;
 import org.eclipse.che.api.core.Page;
 import org.eclipse.che.api.core.ServerException;
+import org.eclipse.che.api.core.model.user.User;
 import org.eclipse.che.api.core.rest.Service;
 import org.eclipse.che.api.core.rest.annotations.GenerateLink;
 import org.eclipse.che.api.user.server.DtoConverter;
 import org.eclipse.che.api.user.server.UserLinksInjector;
 import org.eclipse.che.api.user.server.UserManager;
-import org.eclipse.che.api.user.server.model.impl.UserImpl;
 
 import javax.inject.Inject;
 import javax.ws.rs.DefaultValue;
@@ -44,6 +44,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
  * Provides REST API for admin user management.
  *
  * @author Anatoliy Bazko
+ * @author Anton Korneta
  */
 @Api(value = "/admin/user", description = "Admin user manager")
 @Path("/admin/user")
@@ -82,7 +83,7 @@ public class AdminUserService extends Service {
                            @ApiParam(value = "Skip count") @QueryParam("skipCount") @DefaultValue("0") int skipCount)
             throws ServerException, BadRequestException {
         try {
-            final Page<UserImpl> usersPage = userManager.getAll(maxItems, skipCount);
+            final Page<? extends User> usersPage = userManager.getAll(maxItems, skipCount);
             return Response.ok()
                            .entity(usersPage.getItems(user -> linksInjector.injectLinks(DtoConverter.asDto(user), getServiceContext())))
                            .header("Link", createLinkHeader(usersPage))
@@ -91,4 +92,41 @@ public class AdminUserService extends Service {
             throw new BadRequestException(e.getMessage());
         }
     }
+
+    @GET
+    @Path("/find")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Gets all users whose e-mail/name contains(case insensitive) given part")
+    @ApiResponses({@ApiResponse(code = 200, message = "The response contains searching result"),
+                   @ApiResponse(code = 400, message = "Missed required parameters, parameters are not valid"),
+                   @ApiResponse(code = 500, message = "Internal server error occurred")})
+    public Response find(@ApiParam("User e-mail fragment")
+                            @QueryParam("emailPart")
+                            String emailPart,
+                            @ApiParam("User name fragment")
+                            @QueryParam("namePart")
+                            String namePart,
+                            @ApiParam(value = "Max items")
+                            @QueryParam("maxItems")
+                            @DefaultValue("30")
+                            int maxItems,
+                            @ApiParam(value = "Skip count")
+                            @QueryParam("skipCount")
+                            @DefaultValue("0")
+                            int skipCount) throws ServerException, BadRequestException {
+        if (emailPart == null && namePart == null) {
+            throw new BadRequestException("Missed user's e-mail/name part");
+        }
+        if (emailPart != null && namePart != null) {
+            throw new BadRequestException("Expected either user's e-mail or name part, while both values received");
+        }
+        Page<? extends User> usersPage = namePart == null ? userManager.getByEmailPart(emailPart, maxItems, skipCount)
+                                                          : userManager.getByNamePart(namePart, maxItems, skipCount);
+        return Response.ok()
+                       .entity(usersPage.getItems(user -> linksInjector.injectLinks(DtoConverter.asDto(user),
+                                                                                    getServiceContext())))
+                       .header("Link", createLinkHeader(usersPage))
+                       .build();
+    }
+
 }
