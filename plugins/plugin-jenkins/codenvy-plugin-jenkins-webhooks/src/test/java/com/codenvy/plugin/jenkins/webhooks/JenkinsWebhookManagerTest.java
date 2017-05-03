@@ -41,6 +41,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -89,7 +90,7 @@ public class JenkinsWebhookManagerTest {
         WorkspaceConfigImpl workspace = mock(WorkspaceConfigImpl.class);
         when(factory.getWorkspace()).thenReturn(workspace);
         when(factory.getId()).thenReturn("factoryId");
-        when(factoryManager.getByAttribute(anyInt(), eq(0), any())).thenReturn(singletonList(factory));
+        doReturn(singletonList(factory)).when(factoryManager).getByAttribute(anyInt(), eq(0), any());
         when(factoryManager.getByAttribute(anyInt(), eq(30), any())).thenReturn(emptyList());
         when(factoryManager.getById("factoryId")).thenReturn(factory);
         when(factoryManager.saveFactory(factory)).thenReturn(factory);

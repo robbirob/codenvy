@@ -108,7 +108,7 @@ public class JenkinsWebhookManager {
 
     private List<Factory> getUserFactories() throws NotFoundException, ServerException {
         List<Factory> factories = new ArrayList<>();
-        List<Factory> factoriesPage;
+        List<? extends Factory> factoriesPage;
         String userId = userManager.getByName(username).getId();
         int skipCount = 0;
         do {
