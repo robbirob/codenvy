@@ -160,6 +160,17 @@ export class CodenvyNavBarController {
   }
 
   /**
+   * Returns user nickname.
+   * @return {string}
+   */
+  getUserName(): string {
+    const {attributes, email} = this.profile;
+    const fullName = this.cheAPI.getProfile().getFullName(attributes).trim();
+
+    return fullName ? fullName : email;
+  }
+
+  /**
    * Returns number of workspaces.
    *
    * @return {number}
