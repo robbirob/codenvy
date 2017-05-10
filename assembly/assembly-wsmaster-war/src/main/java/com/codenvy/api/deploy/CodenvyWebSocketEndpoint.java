@@ -14,7 +14,7 @@
  */
 package com.codenvy.api.deploy;
 
-import org.eclipse.che.api.core.websocket.WebSocketMessageReceiver;
+import org.eclipse.che.api.core.websocket.commons.WebSocketMessageReceiver;
 import org.eclipse.che.api.core.websocket.impl.BasicWebSocketEndpoint;
 import org.eclipse.che.api.core.websocket.impl.GuiceInjectorEndpointConfigurator;
 import org.eclipse.che.api.core.websocket.impl.MessagesReSender;

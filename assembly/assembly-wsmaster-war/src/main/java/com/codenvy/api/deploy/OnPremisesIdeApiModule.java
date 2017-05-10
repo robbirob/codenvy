@@ -74,13 +74,14 @@ import org.eclipse.che.account.spi.AccountDao;
 import org.eclipse.che.account.spi.jpa.JpaAccountDao;
 import org.eclipse.che.api.auth.AuthenticationDao;
 import org.eclipse.che.api.auth.AuthenticationService;
-import org.eclipse.che.api.core.jsonrpc.JsonRpcModule;
+import org.eclipse.che.api.core.jsonrpc.impl.JsonRpcModule;
+import org.eclipse.che.api.core.logger.impl.LoggerModule;
 import org.eclipse.che.api.core.notification.WSocketEventBusServer;
 import org.eclipse.che.api.core.rest.ApiInfoService;
 import org.eclipse.che.api.core.rest.CheJsonProvider;
 import org.eclipse.che.api.core.rest.MessageBodyAdapter;
 import org.eclipse.che.api.core.rest.MessageBodyAdapterInterceptor;
-import org.eclipse.che.api.core.websocket.WebSocketModule;
+import org.eclipse.che.api.core.websocket.impl.WebSocketModule;
 import org.eclipse.che.api.environment.server.MachineInstanceProvider;
 import org.eclipse.che.api.environment.server.MachineLinksInjector;
 import org.eclipse.che.api.factory.server.FactoryAcceptValidator;
@@ -193,6 +194,7 @@ public class OnPremisesIdeApiModule extends AbstractModule {
 
         install(new WebSocketModule());
         install(new JsonRpcModule());
+        install(new LoggerModule());
 
         install(new com.codenvy.plugin.webhooks.bitbucketserver.inject.BitbucketServerWebhookModule());
 
