@@ -9,5 +9,9 @@
   "helpPath": "https://codenvy.com/support/",
   "helpTitle": "Help",
   "supportEmail": "wish@codenvy.com",
-  "oauthDocs": "Please contact your administrator."
+  "oauthDocs": "Please contact your administrator.",
+  "docs" : {
+    "stack" : "/docs/getting-started/runtime-stacks/index.html",
+    "workspace" : "/docs/getting-started/intro/index.html"
+  }
 }
