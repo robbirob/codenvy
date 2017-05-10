@@ -24,7 +24,7 @@
     </parent>
     <groupId>com.codenvy.onpremises</groupId>
     <artifactId>onpremises-assembly-parent</artifactId>
-    <version>5.10.0-SNAPSHOT</version>
+    <version>5.10.0</version>
     <packaging>pom</packaging>
     <name>Onpremises :: Parent</name>
     <modules>
@@ -40,7 +40,7 @@
     <scm>
         <connection>scm:git:git@github.com:codenvy/codenvy.git</connection>
         <developerConnection>scm:git:git@github.com:codenvy/codenvy.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>5.10.0</tag>
     </scm>
     <properties>
         <aws.java.sdk.version>1.11.22</aws.java.sdk.version>
