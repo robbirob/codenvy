@@ -56,10 +56,9 @@ import static javax.ws.rs.core.MediaType.TEXT_HTML;
 public class PasswordService {
 
     private static final Logger LOG           = LoggerFactory.getLogger(PasswordService.class);
-    private static final String MAIL_TEMPLATE = "/email-templates/password_recovery.html";
 
     private final MailSender                               mailService;
-    private final UserManager                              userDao;
+    private final UserManager                              userManager;
     private final ProfileManager                           profileManager;
     private final RecoveryStorage                          recoveryStorage;
     private final DefaultEmailResourceResolver             resourceResolver;
@@ -83,7 +82,7 @@ public class PasswordService {
                            @Named("password.recovery.expiration_timeout_hours") long validationMaxAge) {
         this.recoveryStorage = recoveryStorage;
         this.mailService = mailSender;
-        this.userDao = userManager;
+        this.userManager = userManager;
         this.profileManager = profileManager;
         this.resourceResolver = resourceResolver;
         this.mailFrom = mailFrom;
@@ -122,7 +121,7 @@ public class PasswordService {
     public void recoverPassword(@PathParam("usermail") String mail) throws ServerException, NotFoundException {
         try {
             //check if user exists
-            userDao.getByEmail(mail);
+            userManager.getByEmail(mail);
             final String masterEndpoint = uriInfo.getBaseUriBuilder()
                                                  .replacePath(null)
                                                  .build()
@@ -221,9 +220,9 @@ public class PasswordService {
         String email = recoveryStorage.get(uuid);
 
         try {
-            final UserImpl user = new UserImpl(userDao.getByEmail(email));
+            final UserImpl user = new UserImpl(userManager.getByEmail(email));
             user.setPassword(newPassword);
-            userDao.update(user);
+            userManager.update(user);
 
             final Profile profile = profileManager.getById(user.getId());
             if (profile.getAttributes().remove("resetPassword") != null) {
