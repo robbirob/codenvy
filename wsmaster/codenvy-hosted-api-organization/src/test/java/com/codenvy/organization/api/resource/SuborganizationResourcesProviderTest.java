@@ -17,10 +17,8 @@ package com.codenvy.organization.api.resource;
 import com.codenvy.organization.api.OrganizationManager;
 import com.codenvy.organization.shared.model.Organization;
 import com.codenvy.organization.spi.impl.OrganizationImpl;
-import com.codenvy.resource.api.type.TimeoutResourceType;
 import com.codenvy.resource.api.usage.ResourceUsageManager;
 import com.codenvy.resource.model.ProvidedResources;
-import com.codenvy.resource.model.Resource;
 import com.codenvy.resource.spi.impl.ProvidedResourcesImpl;
 import com.codenvy.resource.spi.impl.ResourceImpl;
 
@@ -33,12 +31,10 @@ import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 import javax.inject.Provider;
-import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -123,19 +119,26 @@ public class SuborganizationResourcesProviderTest {
         //given
         when(account.getType()).thenReturn(OrganizationImpl.ORGANIZATIONAL_ACCOUNT);
         when(organization.getParent()).thenReturn("parentOrg");
-        final ResourceImpl parentTestResource = new ResourceImpl("test",
-                                                                 1234,
-                                                                 "unit");
-        final ResourceImpl parentTimeoutResource = new ResourceImpl(TimeoutResourceType.ID,
-                                                                    20,
-                                                                    TimeoutResourceType.UNIT);
-        doReturn(Arrays.asList(parentTestResource, parentTimeoutResource))
+        final ResourceImpl parentNotCapedResource = new ResourceImpl("test",
+                                                                     1234,
+                                                                     "unit");
+        final ResourceImpl parentCapedResource = new ResourceImpl("caped",
+                                                                  20,
+                                                                  "unit");
+        final ResourceImpl parentUnlimitedCapedResource = new ResourceImpl("unlimited",
+                                                                           -1,
+                                                                           "unit");
+        doReturn(asList(parentNotCapedResource, parentCapedResource, parentUnlimitedCapedResource))
                 .when(resourceUsageManager).getTotalResources(anyString());
-        final ResourceImpl timeoutResourceCap = new ResourceImpl(TimeoutResourceType.ID,
-                                                                 10,
-                                                                 TimeoutResourceType.UNIT);
-        List<? extends Resource> resourcesCap = singletonList(timeoutResourceCap);
-        doReturn(resourcesCap).when(resourcesDistributor).getResourcesCaps(any());
+
+        final ResourceImpl capedResourceCap = new ResourceImpl("caped",
+                                                               10,
+                                                               "unit");
+        final ResourceImpl unlimitedCapedResourceCap = new ResourceImpl("unlimited",
+                                                                        40,
+                                                                        "unit");
+        doReturn(asList(capedResourceCap, unlimitedCapedResourceCap))
+                .when(resourcesDistributor).getResourcesCaps(any());
 
         //when
         final List<ProvidedResources> providedResources = suborganizationResourcesProvider.getResources("organization123");
@@ -147,7 +150,9 @@ public class SuborganizationResourcesProviderTest {
                                                                          "organization123",
                                                                          -1L,
                                                                          -1L,
-                                                                         asList(parentTestResource, timeoutResourceCap)));
+                                                                         asList(parentNotCapedResource,
+                                                                                capedResourceCap,
+                                                                                unlimitedCapedResourceCap)));
         verify(accountManager).getById("organization123");
         verify(organizationManager).getById("organization123");
         verify(resourcesDistributor).getResourcesCaps("organization123");

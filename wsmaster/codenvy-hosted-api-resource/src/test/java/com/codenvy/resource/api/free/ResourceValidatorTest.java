@@ -73,16 +73,6 @@ public class ResourceValidatorTest {
                                      .withUnit("kb"));
     }
 
-    @Test(expectedExceptions = BadRequestException.class,
-          expectedExceptionsMessageRegExp = "Resources with type 'test' has negative amount")
-    public void shouldThrowBadRequestExceptionWhenResourceHasNegativeAmount() throws Exception {
-        //when
-        validator.validate(DtoFactory.newDto(ResourceDto.class)
-                                     .withType(RESOURCE_TYPE)
-                                     .withAmount(-1)
-                                     .withUnit("mb"));
-    }
-
     @Test
     public void shouldSetDefaultResourceUnitWhenItIsMissed() throws Exception {
         //given
@@ -95,6 +85,16 @@ public class ResourceValidatorTest {
 
         //then
         assertEquals(toValidate.getUnit(), DEFAULT_RESOURCE_UNIT);
+    }
+
+    @Test(expectedExceptions = BadRequestException.class,
+          expectedExceptionsMessageRegExp = "Resources with type 'test' has negative amount")
+    public void shouldThrowBadRequestExceptionWhenResourceHasNegativeAmount() throws Exception {
+        //when
+        validator.validate(DtoFactory.newDto(ResourceDto.class)
+                                     .withType(RESOURCE_TYPE)
+                                     .withAmount(-1024)
+                                     .withUnit("mb"));
     }
 
     @Test

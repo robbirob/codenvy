@@ -246,8 +246,10 @@ public class ResourceAggregator {
             Resource min = result.get(type);
             if (min == null) {
                 result.put(type, resource);
-            } else if (min.getAmount() > resource.getAmount()) {
-                result.put(type, resource);
+            } else if (resource.getAmount() != -1) {
+                if (min.getAmount() == -1 || min.getAmount() > resource.getAmount()) {
+                    result.put(type, resource);
+                }
             }
         }
         return new ArrayList<>(result.values());

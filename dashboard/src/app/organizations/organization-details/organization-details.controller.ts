@@ -173,12 +173,22 @@ export class OrganizationDetailsController {
   }
 
   /**
-   * Fetch organizations.
+   * Fetch sub-organizations.
    */
-  fetchOrganizations() {
-    this.codenvyOrganization.fetchOrganizations().then(() => {
-      this.updateData();
-    });
+  fetchSubOrganizations() {
+    let manageSubOrganizations = this.isUserAllowedTo(CodenvyOrganizationActions.MANAGE_SUB_ORGANIZATION);
+
+    if (manageSubOrganizations) {
+      this.codenvyOrganization.fetchSubOrganizationsById(this.organization.id).then((data: any) => {
+        this.subOrganizations = data;
+      });
+    } else {
+      this.codenvyOrganization.fetchOrganizations().then(() => {
+        this.subOrganizations = this.lodash.filter(this.codenvyOrganization.getOrganizations(), (organization: codenvy.IOrganization) => {
+          return organization.parent === this.organization.id;
+        });
+      });
+    }
   }
 
   /**
@@ -189,10 +199,8 @@ export class OrganizationDetailsController {
     if (!this.organization) {
       return;
     }
+
     this.newName = angular.copy(this.organization.name);
-    this.subOrganizations = this.lodash.filter(this.codenvyOrganization.getOrganizations(), (organization: codenvy.IOrganization) => {
-      return organization.parent === this.organization.id;
-    });
 
     if (this.isRootOrganization()) {
       this.processTotalResources();
@@ -201,6 +209,7 @@ export class OrganizationDetailsController {
     }
 
     this.allowedUserActions = this.processUserPermissions();
+    this.fetchSubOrganizations();
   }
 
   /**
@@ -378,9 +387,9 @@ export class OrganizationDetailsController {
     let runtime = this.codenvyResourcesDistribution.getOrganizationTotalResourceByType(this.organization.id, CodenvyResourceLimits.RUNTIME);
 
     this.totalResources = {};
-    this.totalResources.workspaceCap = workspace ? workspace.amount : undefined;
-    this.totalResources.runtimeCap = runtime ? runtime.amount : undefined;
-    this.totalResources.ramCap = ram ? ram.amount / 1024 : undefined;
+    this.totalResources.workspaceCap = (workspace && workspace.amount !== -1) ? workspace.amount : undefined;
+    this.totalResources.runtimeCap = (runtime && runtime.amount !== -1) ? runtime.amount : undefined;
+    this.totalResources.ramCap = (ram && ram.amount !== -1) ? ram.amount / 1024 : undefined;
     this.totalResourcesCopy = angular.copy(this.totalResources);
   }
 
@@ -473,17 +482,17 @@ export class OrganizationDetailsController {
     if (this.totalResources.ramCap !== null && this.totalResources.ramCap !== undefined) {
       resources = this.codenvyResourcesDistribution.setOrganizationResourceLimitByType(resources, CodenvyResourceLimits.RAM, (this.totalResources.ramCap * 1024).toString());
     } else {
-      resourcesToRemove.push(CodenvyResourceLimits.RAM);
+      resources = this.codenvyResourcesDistribution.setOrganizationResourceLimitByType(resources, CodenvyResourceLimits.RAM, '-1');
     }
     if (this.totalResources.workspaceCap !== null && this.totalResources.workspaceCap !== undefined) {
       resources = this.codenvyResourcesDistribution.setOrganizationResourceLimitByType(resources, CodenvyResourceLimits.WORKSPACE, this.totalResources.workspaceCap);
     } else {
-      resourcesToRemove.push(CodenvyResourceLimits.WORKSPACE);
+      resources = this.codenvyResourcesDistribution.setOrganizationResourceLimitByType(resources, CodenvyResourceLimits.WORKSPACE, '-1');
     }
     if (this.totalResources.runtimeCap !== null && this.totalResources.runtimeCap !== undefined) {
       resources = this.codenvyResourcesDistribution.setOrganizationResourceLimitByType(resources, CodenvyResourceLimits.RUNTIME, this.totalResources.runtimeCap);
     } else {
-      resourcesToRemove.push(CodenvyResourceLimits.RUNTIME);
+      resources = this.codenvyResourcesDistribution.setOrganizationResourceLimitByType(resources, CodenvyResourceLimits.RUNTIME, '-1');
     }
     // if the timeout resource will be send in this case - it will set the timeout for the current organization, and the updating timeout of
     // parent organization will not affect the current organization, so to avoid this - remove timeout resource if present:

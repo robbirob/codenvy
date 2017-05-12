@@ -75,7 +75,7 @@ export class CodenvyOrganization {
       createOrganization: {method: 'POST', url: '/api/organization'},
       deleteOrganization: {method: 'DELETE', url: '/api/organization/:id'},
       updateOrganization: {method: 'POST', url: '/api/organization/:id'},
-      fetchSubOrganizations: {method: 'GET', url: '/api/organization/:id/organizations'}
+      fetchSubOrganizations: {method: 'GET', url: '/api/organization/:id/organizations', isArray: true}
     });
   }
 

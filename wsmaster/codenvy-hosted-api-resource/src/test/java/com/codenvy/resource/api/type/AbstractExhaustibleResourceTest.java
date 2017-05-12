@@ -56,6 +56,34 @@ public class AbstractExhaustibleResourceTest {
     }
 
     @Test
+    public void shouldReturnResourceWithMinusOneAmountWhenFirstResourceHasMinusOneAmountOnResourcesDeduction() throws Exception {
+        final Resource aggregate = resourceType.aggregate(new ResourceImpl(TestResourceType.ID,
+                                                                           -1,
+                                                                           TestResourceType.UNIT),
+                                                          new ResourceImpl(TestResourceType.ID,
+                                                                           500,
+                                                                           TestResourceType.UNIT));
+
+        assertEquals(aggregate.getType(), TestResourceType.ID);
+        assertEquals(aggregate.getAmount(), -1);
+        assertEquals(aggregate.getUnit(), TestResourceType.UNIT);
+    }
+
+    @Test
+    public void shouldReturnResourceWithMinusOneAmountWhenSecondResourceHasMinusOneAmountOnResourcesDeduction() throws Exception {
+        final Resource aggregate = resourceType.aggregate(new ResourceImpl(TestResourceType.ID,
+                                                                           2000,
+                                                                           TestResourceType.UNIT),
+                                                          new ResourceImpl(TestResourceType.ID,
+                                                                           -1,
+                                                                           TestResourceType.UNIT));
+
+        assertEquals(aggregate.getType(), TestResourceType.ID);
+        assertEquals(aggregate.getAmount(), -1);
+        assertEquals(aggregate.getUnit(), TestResourceType.UNIT);
+    }
+
+    @Test
     public void shouldFindDifferenceResourcesAmountsOnResourcesDeduction() throws Exception {
         final Resource deducted = resourceType.deduct(new ResourceImpl(TestResourceType.ID,
                                                                        1000,
@@ -67,6 +95,30 @@ public class AbstractExhaustibleResourceTest {
         assertEquals(deducted.getType(), TestResourceType.ID);
         assertEquals(deducted.getAmount(), 500);
         assertEquals(deducted.getUnit(), TestResourceType.UNIT);
+    }
+
+    @Test
+    public void shouldReturnResourceWithMinusOneAmountWhenTotalResourceHasMinusOneOnResourcesDeduction() throws Exception {
+        final Resource deducted = resourceType.deduct(new ResourceImpl(TestResourceType.ID,
+                                                                       -1,
+                                                                       TestResourceType.UNIT),
+                                                      new ResourceImpl(TestResourceType.ID,
+                                                                       500,
+                                                                       TestResourceType.UNIT));
+
+        assertEquals(deducted.getType(), TestResourceType.ID);
+        assertEquals(deducted.getAmount(), -1);
+        assertEquals(deducted.getUnit(), TestResourceType.UNIT);
+    }
+
+    @Test(expectedExceptions = NoEnoughResourcesException.class)
+    public void shouldReturnResourceWithMinusOneAmountWhenDeductionResourceHasMinusOneOnResourcesDeduction() throws Exception {
+        resourceType.deduct(new ResourceImpl(TestResourceType.ID,
+                                                                       1000,
+                                                                       TestResourceType.UNIT),
+                                                      new ResourceImpl(TestResourceType.ID,
+                                                                       -1,
+                                                                       TestResourceType.UNIT));
     }
 
     @Test

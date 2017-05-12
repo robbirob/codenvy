@@ -40,6 +40,7 @@ import org.testng.annotations.Test;
 import java.util.Collections;
 import java.util.List;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.mockito.Matchers.any;
@@ -102,6 +103,22 @@ public class OrganizationResourcesDistributorTest {
         verify(manager).checkResourcesAvailability(ORG_ID, toCap);
         verify(distributedResourcesDao).store(new OrganizationDistributedResourcesImpl(ORG_ID,
                                                                                        toCap));
+        verify(resourcesLocks).lock(ORG_ID);
+        verify(lock).close();
+    }
+
+    @Test
+    public void shouldRemoveResourceFromListWhenItsAmountEqualsToMinusOne() throws Exception {
+        ResourceImpl toCap = new ResourceImpl("test1", 1000, "init");
+        ResourceImpl toReset = new ResourceImpl("test2", -1, "init");
+        List<ResourceImpl> resourcesToCap = asList(toCap, toReset);
+
+        //when
+        manager.capResources(ORG_ID, resourcesToCap);
+
+        //then
+        verify(manager).checkResourcesAvailability(ORG_ID, singletonList(toCap));
+        verify(distributedResourcesDao).store(new OrganizationDistributedResourcesImpl(ORG_ID, singletonList(toCap)));
         verify(resourcesLocks).lock(ORG_ID);
         verify(lock).close();
     }

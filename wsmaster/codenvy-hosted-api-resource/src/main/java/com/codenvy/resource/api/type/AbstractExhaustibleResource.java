@@ -31,6 +31,10 @@ public abstract class AbstractExhaustibleResource implements ResourceType {
         checkResource(resourceA);
         checkResource(resourceB);
 
+        if (resourceA.getAmount() == -1 || resourceB.getAmount() == -1) {
+            return new ResourceImpl(getId(), -1, getDefaultUnit());
+        }
+
         return new ResourceImpl(getId(), resourceA.getAmount() + resourceB.getAmount(), getDefaultUnit());
     }
 
@@ -38,6 +42,14 @@ public abstract class AbstractExhaustibleResource implements ResourceType {
     public Resource deduct(Resource total, Resource deduction) throws NoEnoughResourcesException {
         checkResource(total);
         checkResource(deduction);
+
+        if (total.getAmount() == -1) {
+            return total;
+        }
+
+        if (deduction.getAmount() == -1) {
+            throw new NoEnoughResourcesException(total, deduction, deduction);
+        }
 
         final long resultAmount = total.getAmount() - deduction.getAmount();
         if (resultAmount < 0) {

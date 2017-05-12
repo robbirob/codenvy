@@ -189,7 +189,7 @@
                               ng-show="organizationDetailsController.isLoading"></md-progress-linear>
         </div>
         <list-organizations is-loading="organizationsController.isInfoLoading"
-                            on-update="organizationDetailsController.fetchOrganizations()"
+                            on-update="organizationDetailsController.fetchSubOrganizations()"
                             organizations="organizationDetailsController.getSubOrganizations()"></list-organizations>
       </md-tab-body>
     </md-tab>

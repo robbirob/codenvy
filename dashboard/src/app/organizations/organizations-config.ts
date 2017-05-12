@@ -78,7 +78,7 @@ export class OrganizationsConfig {
       resolve: {
         initData: ['organizationsConfigService', (organizationConfigService: OrganizationsConfigService) => {
           return organizationConfigService.resolveOrganizationDetailsRoute();
-        }],
+        }]
       }
     };
 

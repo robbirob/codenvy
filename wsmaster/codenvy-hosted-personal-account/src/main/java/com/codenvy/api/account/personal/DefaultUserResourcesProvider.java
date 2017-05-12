@@ -51,7 +51,7 @@ public class DefaultUserResourcesProvider implements DefaultResourcesProvider {
                                         @Named("limits.user.workspaces.count") int workspacesPerUser,
                                         @Named("limits.user.workspaces.run.count") int runtimesPerUser) {
         this.timeout = TimeUnit.MILLISECONDS.toMinutes(timeout);
-        this.ramPerUser = Size.parseSizeToMegabytes(ramPerUser);
+        this.ramPerUser = "-1".equals(ramPerUser) ? -1 : Size.parseSizeToMegabytes(ramPerUser);
         this.workspacesPerUser = workspacesPerUser;
         this.runtimesPerUser = runtimesPerUser;
     }

@@ -28,6 +28,10 @@ export class CreateOrganizationController {
    */
   private codenvyOrganization: CodenvyOrganization;
   /**
+   * User API interaction.
+   */
+  private cheUser: any;
+  /**
    * Permissions API interaction.
    */
   private codenvyPermissions: CodenvyPermissions;
@@ -76,11 +80,12 @@ export class CreateOrganizationController {
    * Default constructor
    * @ngInject for Dependency injection
    */
-  constructor(codenvyOrganization: CodenvyOrganization, codenvyPermissions: CodenvyPermissions, cheNotification: any,
+  constructor(codenvyOrganization: CodenvyOrganization, codenvyPermissions: CodenvyPermissions, cheUser: any, cheNotification: any,
               $location: ng.ILocationService, $q: ng.IQService, $log: ng.ILogService, $rootScope: che.IRootScopeService,
               initData: any) {
     this.codenvyOrganization = codenvyOrganization;
     this.codenvyPermissions = codenvyPermissions;
+    this.cheUser = cheUser;
     this.cheNotification = cheNotification;
     this.$location = $location;
     this.$q = $q;
@@ -141,7 +146,7 @@ export class CreateOrganizationController {
   addPermissions(organization: codenvy.IOrganization, members: Array<any>) {
     let promises = [];
     members.forEach((member: codenvy.IMember) => {
-      if (member.id) {
+      if (member.id && member.id !== this.cheUser.getUser().id) {
         let actions = this.codenvyOrganization.getActionsFromRoles(member.roles);
         let permissions = {
           instanceId: organization.id,

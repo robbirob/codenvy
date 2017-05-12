@@ -238,7 +238,7 @@ export class ListOrganizationsController {
   getTotalRAM(organizationId: string): any {
     if (this.organizationTotalResources && this.organizationTotalResources.size > 0) {
       let ram = this.organizationTotalResources.get(organizationId);
-      return ram ? (ram / 1024) : null;
+      return (ram && ram !== -1) ? (ram / 1024) : null;
     }
     return null;
   }
@@ -252,7 +252,7 @@ export class ListOrganizationsController {
   getAvailableRAM(organizationId: string): any {
     if (this.organizationAvailableResources && this.organizationAvailableResources.size > 0) {
       let ram = this.organizationAvailableResources.get(organizationId);
-      return ram ? (ram / 1024) : null;
+      return (ram && ram !== -1) ? (ram / 1024) : null;
     }
     return null;
   }

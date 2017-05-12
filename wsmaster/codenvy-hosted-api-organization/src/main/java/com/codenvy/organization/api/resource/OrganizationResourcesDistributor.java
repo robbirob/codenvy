@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Facade for organization resources operations.
@@ -103,6 +104,11 @@ public class OrganizationResourcesDistributor {
         requireNonNull(suborganizationId, "Required non-null suborganization id");
         requireNonNull(resourcesCaps, "Required non-null resources to capResources");
         checkIsSuborganization(suborganizationId);
+
+        // remove caps with amount -1
+        resourcesCaps = resourcesCaps.stream()
+                                     .filter(res -> res.getAmount() != -1)
+                                     .collect(toList());
 
         // locking resources by suborganization should lock resources whole organization tree
         // so we can check resource availability for suborganization organization

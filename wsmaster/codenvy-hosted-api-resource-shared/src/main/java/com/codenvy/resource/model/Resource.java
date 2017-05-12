@@ -28,6 +28,9 @@ public interface Resource {
 
     /**
      * Returns amount of resources.
+     *
+     * <p>Applicable values here are from -1 to {@link Long#MAX_VALUE} inclusively.
+     * -1 value represent infinity.
      */
     long getAmount();
 
