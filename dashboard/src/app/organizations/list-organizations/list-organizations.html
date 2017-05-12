@@ -60,6 +60,7 @@
     </che-list>
   </div>
   <div class="che-list-empty">
-    <span ng-show="(listOrganizationsController.organizations | filter:listOrganizationsController.organizationFilter).length === 0">There are no  {{listOrganizationsController.parentName ? 'sub-organizations' : 'organizations'}}.</span>
+    <span ng-show="(listOrganizationsController.organizations | filter:listOrganizationsController.organizationFilter).length === 0">
+      There are no  {{listOrganizationsController.parentName ? 'sub-organizations' : 'organizations'}}.</span>
   </div>
 </md-content>

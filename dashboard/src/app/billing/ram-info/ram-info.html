@@ -1,5 +1,5 @@
 <div class="ram-info-box" layout="column">
-  <div class="title">You have {{ramInfoController.totalRAM}} GB RAM</div>
+  <div class="title">You have {{ramInfoController.totalRAM !== -1 ? ramInfoController.totalRAM + ' GB RAM' : 'not limited RAM usage'}}</div>
   <div layout="row" layout-align="start center">
     <span class="value">{{ramInfoController.usedRAM}} GB</span>
     <span>in use</span>
