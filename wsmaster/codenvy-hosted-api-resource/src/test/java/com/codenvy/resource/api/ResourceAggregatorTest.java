@@ -334,6 +334,23 @@ public class ResourceAggregatorTest {
         assertTrue(min.contains(minBResource));
     }
 
+    @Test
+    public void shouldReturnMinResourcesWhenTheyContainsMinusOneValue() throws Exception {
+        //given
+        final ResourceImpl aResource = new ResourceImpl(A_RESOURCE_TYPE, -1, "unit");
+        final ResourceImpl bResource = new ResourceImpl(B_RESOURCE_TYPE, -1, "unit");
+        final ResourceImpl minAResource = new ResourceImpl(A_RESOURCE_TYPE, 250, "unit");
+        final ResourceImpl minBResource = new ResourceImpl(B_RESOURCE_TYPE, 500, "unit");
+
+        //when
+        List<? extends Resource> min = resourceAggregator.min(asList(aResource, minAResource, minBResource, bResource));
+
+        //then
+        assertEquals(min.size(), 2);
+        assertTrue(min.contains(minAResource));
+        assertTrue(min.contains(minBResource));
+    }
+
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenListContainsResourceWithUnsupportedTypeOnMinFinding() throws Exception {
         final ResourceImpl dResource = mock(ResourceImpl.class);

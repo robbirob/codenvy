@@ -109,9 +109,12 @@ public class SuborganizationResourcesProvider implements ResourcesProvider {
         return source.stream()
                      .map(resource -> {
                          Resource resourceCap = resourcesCaps.get(resource.getType());
-                         if (resourceCap != null &&
-                             resourceCap.getAmount() < resource.getAmount()) {
-                             return resourceCap;
+                         if (resourceCap != null) {
+                             if (resource.getAmount() == -1) {
+                                 return resourceCap;
+                             } else if (resourceCap.getAmount() < resource.getAmount()) {
+                                 return resourceCap;
+                             }
                          }
                          return resource;
                      })

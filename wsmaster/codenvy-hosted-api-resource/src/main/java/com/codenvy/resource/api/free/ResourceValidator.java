@@ -82,7 +82,7 @@ public class ResourceValidator {
             }
         }
 
-        if (resource.getAmount() < 0) {
+        if (resource.getAmount() < -1) {
             throw new BadRequestException("Resources with type '" + resource.getType() + "' has negative amount");
         }
     }
