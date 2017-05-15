@@ -75,7 +75,6 @@ import org.eclipse.che.account.spi.jpa.JpaAccountDao;
 import org.eclipse.che.api.auth.AuthenticationDao;
 import org.eclipse.che.api.auth.AuthenticationService;
 import org.eclipse.che.api.core.jsonrpc.impl.JsonRpcModule;
-import org.eclipse.che.api.core.logger.impl.LoggerModule;
 import org.eclipse.che.api.core.notification.WSocketEventBusServer;
 import org.eclipse.che.api.core.rest.ApiInfoService;
 import org.eclipse.che.api.core.rest.CheJsonProvider;
@@ -194,7 +193,6 @@ public class OnPremisesIdeApiModule extends AbstractModule {
 
         install(new WebSocketModule());
         install(new JsonRpcModule());
-        install(new LoggerModule());
 
         install(new com.codenvy.plugin.webhooks.bitbucketserver.inject.BitbucketServerWebhookModule());
 
