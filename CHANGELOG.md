@@ -1,5 +1,41 @@
 # Change Log
 
+## [5.10.0](https://github.com/codenvy/codenvy/tree/5.10.0) (2017-05-10)
+[Full Changelog](https://github.com/codenvy/codenvy/compare/5.9.0...5.10.0)
+
+**Pull requests merged:**
+- Add docs links into branding JSON. [2176](https://github.com/codenvy/codenvy/pull/2176)
+- Show the user email in the case when user first name and user last name are empty. [2163](https://github.com/codenvy/codenvy/pull/2163)
+- [UD] Fixed redirection on account deletion [2161](https://github.com/codenvy/codenvy/pull/2161)
+- Fixes the base path for Swagger configuration on the agent. [2149](https://github.com/codenvy/codenvy/pull/2149)
+- Improved error logging on container creation. [2147](https://github.com/codenvy/codenvy/pull/2147)
+- Retry interact with repository on fail. [2145](https://github.com/codenvy/codenvy/pull/2145)
+- [dashboard] Allowed to create workspace for user before have been added to any organization, allowed user to see the available timeout provided to user. [2142](https://github.com/codenvy/codenvy/pull/2142)
+- Added preparation functionalities needed for seats resources [2120](https://github.com/codenvy/codenvy/pull/2120)
+
+## [5.9.0](https://github.com/codenvy/codenvy/tree/5.9.0) (2017-04-26)
+[Full Changelog](https://github.com/codenvy/codenvy/compare/5.8.0...5.9.0)
+
+**Pull requests merged:**
+- [UD] Fixed the wsagents API requests by providing machine API token. [2111](https://github.com/codenvy/codenvy/pull/2111)
+- Allow to confugure swarm log level from codenvy.env [2110](https://github.com/codenvy/codenvy/pull/2110)
+- Added publishing BeforeAccountRemovedEvent by OrganizationManager. [2109](https://github.com/codenvy/codenvy/pull/2109)
+- Fix logging system info when failed to recieve RAM values from docker [2098](https://github.com/codenvy/codenvy/pull/2098)
+- Added failed build Factory to the Jenkins integration. [2097](https://github.com/codenvy/codenvy/pull/2097)
+- Added check that SSH into workspace succeeds when doing backup/restore. [2084](https://github.com/codenvy/codenvy/pull/2084)
+- Introduced two maven modules for ws-agent minimum set of components that need to start workspace agent [2060](https://github.com/codenvy/codenvy/pull/2060)
+- Add organization menu item for system admins only. [1965](https://github.com/codenvy/codenvy/pull/1965)
+
+## [5.8.0](https://github.com/codenvy/codenvy/tree/5.8.0) (2017-04-13)
+[Full Changelog](https://github.com/codenvy/codenvy/compare/5.7.0...5.8.0)
+
+**Pull requests merged:**
+- Fix constructor parameters according changes in Che [2076](https://github.com/codenvy/codenvy/pull/2076)
+- Remove not needed depndencies [2069](https://github.com/codenvy/codenvy/pull/2069)
+- Removed unused code regarding plugin service [2068](https://github.com/codenvy/codenvy/pull/2068)
+- HostedEnvConnectionClosedInformer now extends class ConnectionClosedInformerImp from Che this allow make different behavior in Codenvy project. [2059](https://github.com/codenvy/codenvy/pull/2059)
+- Added new indexes to DB for faster searches and deletes. [2058](https://github.com/codenvy/codenvy/pull/2058)
+
 ## [5.7.1](https://github.com/codenvy/codenvy/tree/5.7.1) (2017-04-08)
 [Full Changelog](https://github.com/codenvy/codenvy/compare/5.7.0...5.7.1)
 
