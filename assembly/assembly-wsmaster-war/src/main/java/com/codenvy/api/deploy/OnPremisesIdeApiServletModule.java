@@ -14,6 +14,7 @@
  */
 package com.codenvy.api.deploy;
 
+import com.codenvy.auth.sso.client.CodenvyCsrfFilter;
 import com.google.inject.servlet.ServletModule;
 
 import org.apache.catalina.filters.CorsFilter;
@@ -79,6 +80,7 @@ public class OnPremisesIdeApiServletModule extends ServletModule {
     @Override
     protected void configureServlets() {
         filter(pathForLoginFilter).through(com.codenvy.auth.sso.client.LoginFilter.class);
+        filter(pathForLoginFilter).through(CodenvyCsrfFilter.class);
         filter(pathForLoginFilter).through(com.codenvy.api.license.filter.SystemLicenseLoginFilter.class);
 
         final Map<String, String> corsFilterParams = new HashMap<>();

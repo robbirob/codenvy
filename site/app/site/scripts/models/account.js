@@ -17,7 +17,48 @@
  */
 (function(window) {
     var _gaq = _gaq || [];
+
     define(["jquery", "underscore", "json", "cookies"], function($, _, JSON) {
+
+      // Prevents CSRF(see https://en.wikipedia.org/wiki/Cross-site_request_forgery)
+      // using additional token header, see
+      // https://tomcat.apache.org/tomcat-7.0-doc/config/filter.html#CSRF_Prevention_Filter_for_REST_APIs
+      var CsrfPreventionInterceptor = function() {
+        this.CSRF_TOKEN_HEADER_NAME = "X-CSRF-Token";
+        this.csrfToken = "";
+
+        function isModifyingMethod(method) {
+          return method === "POST" || method === "PUT" || method === "DELETE";
+        }
+
+        var self = this;
+
+        // adds token to the XMLHttpRequest
+        this.addToken = function(xhr, method) {
+          if (method === "GET" && !self.csrfToken) {
+            xhr.setRequestHeader(self.CSRF_TOKEN_HEADER_NAME, "Fetch");
+          } else if (isModifyingMethod(method) && self.csrfToken) {
+            xhr.setRequestHeader(self.CSRF_TOKEN_HEADER_NAME, self.csrfToken);
+          }
+        };
+
+        // gets token from XMLHttpRequest, sets it to the current context
+        this.catchToken = function(xhr, method) {
+          var respToken = xhr.getResponseHeader(self.CSRF_TOKEN_HEADER_NAME);
+          if (respToken && method === "GET") {
+            self.csrfToken = respToken;
+          }
+        };
+      };
+
+      var csrfPreventionInterceptor = new CsrfPreventionInterceptor();
+      $.ajaxPrefilter(function(options, originalOptions, xhr) {
+        csrfPreventionInterceptor.addToken(xhr, options.type);
+      });
+      $(document).ajaxComplete(function(event, xhr, settings) {
+        csrfPreventionInterceptor.catchToken(xhr, settings.type);
+      });
+
         /*
             AccountError is used to report errors through error callback function
             (see details below ). Example usage:
@@ -576,4 +617,5 @@
             }
         };
     });
+
 }(window));
