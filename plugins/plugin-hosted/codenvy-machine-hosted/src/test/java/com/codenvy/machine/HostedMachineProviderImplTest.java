@@ -17,7 +17,7 @@ package com.codenvy.machine;
 import com.codenvy.machine.authentication.server.MachineTokenRegistry;
 
 import org.eclipse.che.api.core.ServerException;
-import org.eclipse.che.api.core.jsonrpc.RequestTransmitter;
+import org.eclipse.che.api.core.jsonrpc.commons.RequestTransmitter;
 import org.eclipse.che.api.core.util.JsonRpcEndpointToMachineNameHolder;
 import org.eclipse.che.api.core.util.LineConsumer;
 import org.eclipse.che.api.environment.server.model.CheServiceImpl;
