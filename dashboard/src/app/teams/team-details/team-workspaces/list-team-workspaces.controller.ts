@@ -185,7 +185,7 @@ export class ListTeamWorkspacesController {
    */
   filterWorkspacesByNamespace(): Array<any> {
     let workspaces = this.cheWorkspace.getWorkspaces();
-    return this.lodash.filter(workspaces, (workspace: any) => {
+    return this.lodash.filter(workspaces, (workspace: che.IWorkspace) => {
       return workspace.namespace === this.team.qualifiedName;
     });
   }
@@ -195,7 +195,7 @@ export class ListTeamWorkspacesController {
    */
   deleteSelectedWorkspaces(): void {
     const selectedWorkspaces = this.cheListHelper.getSelectedItems(),
-          selectedWorkspaceIds = selectedWorkspaces.map((workspace: any) => {
+          selectedWorkspaceIds = selectedWorkspaces.map((workspace: che.IWorkspace) => {
             return workspace.id;
           });
 
