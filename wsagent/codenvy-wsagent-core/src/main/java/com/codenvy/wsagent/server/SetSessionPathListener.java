@@ -30,7 +30,14 @@ import java.net.URL;
 
 
 /**
- * Sets correct path to the session id cookies.
+ * Sets correct WS path to the session id cookies.
+ * Since if agent JSESSIONID cookie will be provided with "/" path,
+ * browser will send it both to master and other agents. To prevent this,
+ * each agent JSESSIONID cookie should contain unique path related to this agent,
+ * for example: path="/34011_172.17.0.1/api"
+ *
+ * This listener should be bound in WEB.xml, because Guice binding of {@code ServletContextListener}
+ * not possible in such case.
  *
  * @author Max Shaposhnik (mshaposhnik@codenvy.com)
  */
